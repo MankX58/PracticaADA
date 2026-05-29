@@ -128,10 +128,10 @@ def dijkstra(grafo, inicio, fin, alfa=1.0, beta=0.0):
     Algoritmo de Dijkstra para encontrar la ruta de costo mínimo.
     
     Análisis de Complejidad:
-    - Temporal: O(N log N), donde N es el número de nodos.
-      Insertar y extraer del min-heap toma O(log N), y en el peor caso se hace 
+    - Temporal: O(n log n), donde n es el número de nodos.
+      Insertar y extraer del min-heap toma O(log n), y en el peor caso se hace 
       para cada calle o intersección.
-    - Espacial: O(N) para la representación del grafo en lista de adyacencia,
+    - Espacial: O(n) para la representación del grafo en lista de adyacencia,
       y estructuras auxiliares.
     """
     return algoritmo_base(grafo, inicio, fin, alfa, beta, usar_heuristica=False)
@@ -141,9 +141,9 @@ def a_estrella(grafo, inicio, fin, alfa=1.0, beta=0.0):
     Algoritmo A* (A-Estrella) utilizando Distancia Haversine como heurística.
     
     Análisis de Complejidad:
-    - Temporal: O(N log N) en el peor caso teórico. Sin embargo, en la 
+    - Temporal: O(n log n) en el peor caso teórico. Sin embargo, en la 
       práctica explora significativamente menos nodos que Dijkstra gracias a la 
       heurística espacial que dirige la búsqueda hacia el destino.
-    - Espacial: O(N) idéntico a Dijkstra.
+    - Espacial: O(n) idéntico a Dijkstra.
     """
     return algoritmo_base(grafo, inicio, fin, alfa, beta, usar_heuristica=True)
