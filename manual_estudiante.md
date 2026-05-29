@@ -69,14 +69,13 @@ Este proyecto integra los conceptos fundamentales de la materia:
 
 ## 2. Estructura del Proyecto
 
-El proyecto se organiza en **5 archivos**, cada uno con una responsabilidad clara siguiendo el principio de **separación de responsabilidades**:
+El proyecto se organiza en **4 archivos**, cada uno con una responsabilidad clara siguiendo el principio de **separación de responsabilidades**:
 
 ```
 PracticaADA/
 │
 ├── datos.py            # 📊 Módulo de datos (nodos y aristas)
 ├── grafo.py            # 🔗 Lógica del grafo y algoritmos
-├── principal.py        # 💻 Interfaz de consola
 ├── interfaz.py         # 🌐 Interfaz web (Streamlit)
 ├── requirements.txt    # 📦 Dependencias del proyecto
 └── manual_estudiante.md # 📖 Este documento
@@ -99,7 +98,23 @@ PracticaADA/
 | `generar_datos_simulados()` | Genera el DataFrame con nodos y aristas predefinidos |
 | `cargar_red_vial(ruta_archivo=None)` | Carga datos desde archivo CSV o usa los predefinidos |
 | `obtener_nombres_nodos()` | Retorna lista de nombres de todos los nodos |
-| `obtener_coordenadas(nombre)` | Retorna (latitud, longitud) de un nodo dado |
+
+### 2.1.1 Origen, Formato e Inicialización de los Datos
+
+Los datos de la red vial son **simulados pero basados en ubicaciones reales** de la ciudad de Medellín. Se estructuran de la siguiente forma:
+
+1. **Diccionario de Nodos (`NODOS_MEDELLIN`)**: Contiene 25 puntos clave de la ciudad. Sus coordenadas GPS reales `(latitud, longitud)` fueron extraídas de servicios de cartografía estándar (como Google Maps o OpenStreetMap).
+2. **Lista de Aristas Simuladas (`_ARISTAS_SIMULADAS`)**: Define las calles y conexiones entre los nodos. Tanto las longitudes iniciales como el "riesgo de acoso" son datos generados con fines académicos para permitir la optimización multicriterio.
+
+El formato exacto de las tuplas de aristas es:
+`("nombre_via", "origen", "destino", longitud_metros, es_una_via, riesgo_acoso)`
+Por ejemplo:
+`("Av Oriental T1", "San Antonio", "Parque Berrío", 650, False, 0.40)`
+
+**Inicialización y el archivo `.csv` (Caché local):** 
+El sistema está diseñado para ser eficiente. La función `cargar_red_vial()` primero verifica si existe un archivo llamado `red_vial_medellin.csv` en la carpeta del proyecto. 
+- **Si existe:** Lo lee directamente usando pandas. Esto hace que la aplicación cargue casi instantáneamente.
+- **Si NO existe:** Llama a la función `generar_datos_simulados()`, la cual cruza las tuplas estáticas con las coordenadas GPS. Durante esta fase se realiza un paso matemático crítico: **asegurar la admisibilidad de la heurística de A***. El algoritmo recalcula que la longitud de cualquier calle sea al menos un 5% mayor a la distancia en línea recta (Haversine) entre ambos puntos (`max(longitud, h * 1.05)`). Una vez generado este DataFrame validado, **se guarda automáticamente como `red_vial_medellin.csv`** para que quede en caché para futuras ejecuciones.
 
 ### 2.2 `grafo.py` — Lógica del Grafo y Algoritmos
 
@@ -116,34 +131,19 @@ PracticaADA/
 | `a_estrella(grafo, inicio, fin, alfa, beta)` | Algoritmo A* con heurística Haversine |
 | `construir_grafo(datos_df)` | Construye el grafo a partir del DataFrame de datos |
 
-### 2.3 `principal.py` — Interfaz de Consola
 
-**Responsabilidad:** Punto de entrada principal para ejecución por línea de comandos.
-
-**Flujo de ejecución:**
-```
-1. Cargar datos (datos.py)
-2. Construir grafo (grafo.py)
-3. Mostrar lista de nodos disponibles
-4. Solicitar al usuario: origen, destino, α, β
-5. Ejecutar Dijkstra y A*
-6. Imprimir comparación de resultados
-7. Generar mapa HTML con folium
-```
-
-### 2.4 `interfaz.py` — Interfaz Web con Streamlit
+### 2.3 `interfaz.py` — Interfaz Web con Streamlit
 
 **Responsabilidad:** Proveer una interfaz gráfica interactiva y visualmente atractiva.
 
 **Características:**
 - Selectboxes para origen y destino.
-- Sliders para ajustar α (peso de distancia) y β (peso de riesgo).
-- Mapa interactivo con `folium` que muestra las rutas trazadas.
-- Métricas comparativas entre Dijkstra y A*.
-- Tablas de detalle de cada ruta (nodo por nodo).
-- Sección de análisis experimental con gráficas de rendimiento.
+- Selección de estrategias de ruta (Rápida, Segura, Balance, Manual).
+- Sliders para ajustar α (peso de distancia) y β (peso de riesgo) de forma personalizada.
+- Mapa interactivo con `folium` que muestra las rutas trazadas comparando algoritmos.
+- Métricas comparativas de rendimiento y exploración entre Dijkstra y A*.
 
-### 2.5 `requirements.txt` — Dependencias
+### 2.4 `requirements.txt` — Dependencias
 
 ```
 pandas
@@ -152,7 +152,7 @@ streamlit
 streamlit-folium
 ```
 
-### 2.6 Diagrama de Relaciones entre Módulos
+### 2.5 Diagrama de Relaciones entre Módulos
 
 ```
 ┌─────────────┐
@@ -165,10 +165,10 @@ streamlit-folium
 └──┬───────┬──┘
    │       │
    ▼       ▼
-┌──────┐ ┌──────────┐
-│princ.│ │interfaz. │  ← Interfaces de usuario
-│ .py  │ │   .py    │
-└──────┘ └──────────┘
+       ┌──────────┐
+       │interfaz. │  ← Interfaz de usuario Web
+       │   .py    │
+       └──────────┘
 ```
 
 ---
@@ -952,40 +952,7 @@ Esto instalará:
 python -c "import pandas; import folium; import streamlit; print('¡Todo instalado correctamente!')"
 ```
 
-### 10.4 Ejecutar la Interfaz de Consola
 
-```bash
-python principal.py
-```
-
-**Flujo esperado:**
-```
-=== Rutas Óptimas y Seguras en Medellín ===
-
-Nodos disponibles:
-1. Parque Berrío
-2. Parque de Bolívar
-3. Estación Prado
-...
-
-Seleccione origen (número): 1
-Seleccione destino (número): 10
-Valor de alfa (peso distancia, 0-1): 0.5
-Valor de beta (peso riesgo, 0-1): 0.5
-
-Ejecutando Dijkstra...
-Ejecutando A*...
-
-=== Resultados ===
-Dijkstra: Ruta encontrada con costo 234.5
-  Parque Berrío → Estación Prado → ... → Destino
-A*: Ruta encontrada con costo 234.5
-  Parque Berrío → Estación Prado → ... → Destino
-
-Mapa generado en: mapa_ruta.html
-```
-
-### 10.5 Ejecutar la Interfaz Web (Streamlit)
 
 ```bash
 streamlit run interfaz.py
@@ -1079,14 +1046,7 @@ def mostrar_metricas(etiqueta, valor, color="#f2d8c2"):
 2. **Nodos visitados:** A* generalmente explora menos nodos.
 3. **Tiempo:** A* suele ser ligeramente más rápido.
 
-### 11.5 Selección Interactiva por Clic
 
-La interfaz cuenta con un sistema bidireccional que permite cambiar el origen y el destino haciendo clic directamente sobre el mapa interactivo:
-
-1. **Configurar la Acción:** En la barra lateral, bajo la sección **"Selección por Mapa"**, elige si deseas establecer el nodo como **Inicio** o **Destino**.
-2. **Hacer Clic en el Mapa:** Haz clic en cualquier marcador circular de nodo o en cualquier tramo de calle.
-3. **Actualización Automática:** El sistema detectará la coordenada del clic, calculará mediante distancia euclidiana cuál es el nodo más cercano en la base de datos, y actualizará la ruta de forma inmediata sin necesidad de tocar los menús desplegables de la barra lateral.
-4. **Retroalimentación:** Aparecerá una notificación emergente flotante (toast) confirmando el cambio del punto.
 
 ### 11.6 Experimentación Sugerida
 
