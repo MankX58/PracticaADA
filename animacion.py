@@ -71,8 +71,9 @@ def mostrar_simulacion(grafo, inicio, fin, alfa, beta):
             
             nodos_necesarios = set([inicio, fin])
             for p in pasos_d + pasos_a:
-                nodos_necesarios.add(p["desde"])
-                nodos_necesarios.add(p["hasta"])
+                nodos_necesarios.add(p["node"])
+                if p["parent"] is not None:
+                    nodos_necesarios.add(p["parent"])
             
             nodos_json = {n: grafo.obtener_coordenadas(n) for n in nodos_necesarios if n in grafo.coordenadas}
             aristas_json = []  # No se enviarán para no colapsar el navegador
