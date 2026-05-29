@@ -32,7 +32,7 @@ NODOS_MEDELLIN = {
 # Cache de nodos para no recalcular
 _cache_nodos_cercanos = {}
 
-def cargar_red_vial(ruta_archivo="calles_de_medellin_con_acoso.csv"):
+def cargar_red_vial(ruta_archivo="data/calles_de_medellin_con_acoso.csv"):
     # Carga el dataset real gigante
     if os.path.exists(ruta_archivo):
         return pd.read_csv(ruta_archivo, sep=';')
