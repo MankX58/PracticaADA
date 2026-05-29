@@ -1,0 +1,58 @@
+nombre,origen_nombre,destino_nombre,origen_lat,origen_lon,destino_lat,destino_lon,longitud,es_una_via,riesgo_acoso
+Av del Ferrocarril T1,Caribe,Hospital,6.275,-75.576,6.262,-75.576,1517.81,False,0.35
+Av del Ferrocarril T2,Hospital,Universidad,6.262,-75.576,6.268,-75.568,1163.09,False,0.25
+Av del Ferrocarril T3,Universidad,Parque Bolivar,6.268,-75.568,6.254,-75.568,1634.57,False,0.3
+Av del Ferrocarril T4,Parque Bolivar,San Antonio,6.254,-75.568,6.247,-75.568,817.28,False,0.4
+Av del Ferrocarril T5,San Antonio,Alpujarra,6.247,-75.568,6.245,-75.57,380.0,False,0.45
+Av del Ferrocarril T6,Alpujarra,Exposiciones,6.245,-75.57,6.237,-75.568,962.45,False,0.3
+Av del Ferrocarril T7,Exposiciones,Industriales,6.237,-75.568,6.231,-75.571,782.29,False,0.2
+Av del Ferrocarril T8,Industriales,Aguacatala,6.231,-75.571,6.218,-75.572,1522.24,False,0.15
+Av del Ferrocarril T9,Aguacatala,Poblado,6.218,-75.572,6.21,-75.574,962.45,False,0.1
+Calle 50 T1,San Antonio,Suramericana,6.247,-75.568,6.25,-75.585,2003.89,False,0.35
+Calle 50 T2,Suramericana,Estadio,6.25,-75.585,6.256,-75.59,909.66,False,0.2
+Calle 50 T3,Estadio,Floresta,6.256,-75.59,6.246,-75.596,1359.44,False,0.25
+Calle 50 T4,Floresta,San Javier,6.246,-75.596,6.258,-75.612,2326.21,False,0.55
+Calle Boyaca,Parque Berrio,Parque Bolivar,6.2518,-75.5636,6.254,-75.568,571.63,False,0.5
+Carrera Junin,Parque Berrio,San Antonio,6.2518,-75.5636,6.247,-75.568,758.19,True,0.45
+Calle Colombia,Parque Bolivar,Alpujarra,6.254,-75.568,6.245,-75.57,1076.12,False,0.4
+Av Oriental Sur,Parque Berrio,Buenos Aires,6.2518,-75.5636,6.239,-75.554,1864.09,False,0.55
+Av Oriental Norte,Parque Berrio,Aranjuez,6.2518,-75.5636,6.273,-75.558,2559.1,False,0.5
+Carrera 70,Laureles,Suramericana,6.245,-75.592,6.25,-75.585,1000.42,False,0.15
+Av Nutibara,Laureles,Belen,6.245,-75.592,6.232,-75.591,1522.24,False,0.2
+Calle 33,Laureles,Floresta,6.245,-75.592,6.246,-75.596,650.0,False,0.18
+Transversal Inferior,Belen,Industriales,6.232,-75.591,6.231,-75.571,2324.23,False,0.25
+Carrera 76,Belen,Itagui,6.232,-75.591,6.185,-75.599,5565.48,False,0.3
+Av 80 Sur,La America,Laureles,6.248,-75.598,6.245,-75.592,779.5,False,0.22
+Av 80 Centro,La America,Floresta,6.248,-75.598,6.246,-75.596,560.0,False,0.28
+Av 80 Norte,La America,Suramericana,6.248,-75.598,6.25,-75.585,1526.75,False,0.25
+Autopista Norte,Caribe,Castilla,6.275,-75.576,6.283,-75.579,1100.0,False,0.4
+Carrera 52 Norte,Caribe,Aranjuez,6.275,-75.576,6.273,-75.558,2102.01,False,0.45
+Calle Barranquilla,Universidad,Aranjuez,6.268,-75.568,6.273,-75.558,1299.11,False,0.35
+Carrera 45,Aranjuez,Manrique,6.273,-75.558,6.272,-75.548,1166.42,False,0.6
+Av del Rio Norte,Castilla,Robledo,6.283,-75.579,6.274,-75.597,2338.37,False,0.35
+Calle 80,Robledo,Hospital,6.274,-75.597,6.262,-75.576,2811.2,False,0.3
+Av 80 Occidental,Robledo,Estadio,6.274,-75.597,6.256,-75.59,2253.14,False,0.32
+Carrera 65,Estadio,Hospital,6.256,-75.59,6.262,-75.576,1769.4,False,0.28
+Calle San Juan,San Javier,La America,6.258,-75.612,6.248,-75.598,2000.82,False,0.48
+Av El Poblado,Poblado,Envigado,6.21,-75.574,6.174,-75.592,4693.81,False,0.08
+Calle 10 Sur,Envigado,Itagui,6.174,-75.592,6.185,-75.599,1519.75,False,0.22
+Av Las Vegas,Aguacatala,Envigado,6.218,-75.572,6.174,-75.592,5637.38,False,0.12
+Loma El Tesoro,Poblado,Industriales,6.21,-75.574,6.231,-75.571,2476.45,True,0.1
+Av 33,Exposiciones,Suramericana,6.237,-75.568,6.25,-75.585,2489.32,False,0.3
+Calle 30,Industriales,Belen,6.231,-75.571,6.232,-75.591,2324.23,False,0.28
+Diagonal 75,Estadio,Robledo,6.256,-75.59,6.274,-75.597,2253.14,False,0.33
+Carrera 46,Universidad,Hospital,6.268,-75.568,6.262,-75.576,1163.09,False,0.3
+Calle Gardel,Manrique,Universidad,6.272,-75.548,6.268,-75.568,2367.64,False,0.55
+Av Los Industriales,Industriales,Exposiciones,6.231,-75.571,6.237,-75.568,782.29,False,0.18
+Callejon del Centro,San Antonio,Parque Berrio,6.247,-75.568,6.2518,-75.5636,758.19,False,0.7
+Paseo Carabobo,Parque Bolivar,San Antonio,6.254,-75.568,6.247,-75.568,817.28,False,0.55
+Via Buenos Aires,Exposiciones,Buenos Aires,6.237,-75.568,6.239,-75.554,1641.58,False,0.48
+Calle 45,Aranjuez,Parque Berrio,6.273,-75.558,6.2518,-75.5636,2559.1,False,0.52
+Av Regional,Caribe,Exposiciones,6.275,-75.576,6.237,-75.568,4532.79,False,0.32
+Transversal Superior,Buenos Aires,San Antonio,6.239,-75.554,6.247,-75.568,1874.2,False,0.42
+Autopista Norte T2,Tricentenario,Caribe,6.2904,-75.5647,6.275,-75.576,2225.46,False,0.35
+Calle 104,Tricentenario,Castilla,6.2904,-75.5647,6.283,-75.579,1870.98,False,0.4
+Calle 80 T2,Pilarica,Robledo,6.275,-75.585,6.274,-75.597,1397.55,False,0.25
+Puente del Mico,Pilarica,Caribe,6.275,-75.585,6.275,-75.576,1044.5,False,0.3
+Calle 30 T2,Universidad de Medellin,Belen,6.2311,-75.6115,6.232,-75.591,2381.65,False,0.15
+Carrera 87,Universidad de Medellin,La America,6.2311,-75.6115,6.248,-75.598,2519.59,False,0.2
