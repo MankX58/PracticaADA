@@ -89,20 +89,33 @@ def _reconstruir_ruta(fin, distancias, predecesores, aristas_usadas, tiempo_ms, 
 
 def algoritmo_base(grafo, inicio, fin, alfa, beta, usar_heuristica=False):
     t0 = time.perf_counter()
-    distancias = {n: float("inf") for n in grafo.obtener_nodos()}
+    distancias = {}
+    
+    for n in grafo.obtener_nodos():
+        distancias[n] = float("inf")
+
     distancias[inicio] = 0
-    predecesores, aristas_usadas = {n: None for n in grafo.obtener_nodos()}, {}
+    predecesores = {}
+
+    for n in grafo.obtener_nodos():
+        predecesores[n] = None
+
+    aristas_usadas = {}
     visitados, nodos_explorados = set(), 0
     cola = [(0, inicio)]
 
-    coord_fin = grafo.obtener_coordenadas(fin) if usar_heuristica else None
+    coord_fin = None
+    if usar_heuristica:
+        coord_fin = grafo.obtener_coordenadas(fin)
 
     while cola:
         _, actual = heapq.heappop(cola)
-        if actual in visitados: continue
+        if actual in visitados:
+            continue
         visitados.add(actual)
         nodos_explorados += 1
-        if actual == fin: break
+        if actual == fin:
+            break
 
         for a in grafo.obtener_vecinos(actual):
             v = a["vecino"]
@@ -125,9 +138,7 @@ def algoritmo_base(grafo, inicio, fin, alfa, beta, usar_heuristica=False):
 
 def dijkstra(grafo, inicio, fin, alfa=1.0, beta=0.0):
     """
-    Algoritmo de Dijkstra para encontrar la ruta de costo mínimo.
-    
-    Análisis de Complejidad:
+    Complejidad:
     - Temporal: O(n log n), donde n es el número de nodos.
       Insertar y extraer del min-heap toma O(log n), y en el peor caso se hace 
       para cada calle o intersección.
@@ -138,9 +149,7 @@ def dijkstra(grafo, inicio, fin, alfa=1.0, beta=0.0):
 
 def a_estrella(grafo, inicio, fin, alfa=1.0, beta=0.0):
     """
-    Algoritmo A* (A-Estrella) utilizando Distancia Haversine como heurística.
-    
-    Análisis de Complejidad:
+    Complejidad:
     - Temporal: O(n log n) en el peor caso teórico. Sin embargo, en la 
       práctica explora significativamente menos nodos que Dijkstra gracias a la 
       heurística espacial que dirige la búsqueda hacia el destino.
