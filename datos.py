@@ -23,6 +23,9 @@ NODOS_MEDELLIN = {
     "Envigado": (6.1740, -75.5920), "Itagui": (6.1850, -75.5990),
     "Manrique": (6.2720, -75.5480), "Robledo": (6.2740, -75.5970),
     "La America": (6.2480, -75.5980),
+    "Tricentenario": (6.2904, -75.5647),
+    "Pilarica": (6.2750, -75.5850),
+    "Universidad de Medellin": (6.2311, -75.6115),
 }
 
 _ARISTAS_SIMULADAS = [
@@ -77,6 +80,14 @@ _ARISTAS_SIMULADAS = [
     ("Calle 45", "Aranjuez", "Parque Berrio", 1200, False, 0.52),
     ("Av Regional", "Caribe", "Exposiciones", 2100, False, 0.32),
     ("Transversal Superior", "Buenos Aires", "San Antonio", 800, False, 0.42),
+    
+    # Nuevas conexiones con coordenadas reales
+    ("Autopista Norte T2", "Tricentenario", "Caribe", 1800, False, 0.35),
+    ("Calle 104", "Tricentenario", "Castilla", 1600, False, 0.40),
+    ("Calle 80 T2", "Pilarica", "Robledo", 1300, False, 0.25),
+    ("Puente del Mico", "Pilarica", "Caribe", 1000, False, 0.30),
+    ("Calle 30 T2", "Universidad de Medellin", "Belen", 2200, False, 0.15),
+    ("Carrera 87", "Universidad de Medellin", "La America", 2400, False, 0.20),
 ]
 
 def generar_datos_simulados():
