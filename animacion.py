@@ -66,14 +66,17 @@ def mostrar_simulacion(grafo, inicio, fin, alfa, beta):
         
     if st.session_state.get("run_sim", False):
         with st.spinner("Preparando animación..."):
-            nodos_json = {n: grafo.obtener_coordenadas(n) for n in grafo.obtener_nodos()}
-            aristas_json = []
-            for n, vecinos in grafo.adyacencia.items():
-                for v in vecinos:
-                    aristas_json.append([n, v["vecino"]])
-                    
             pasos_d, ruta_d = obtener_pasos_animacion(grafo, inicio, fin, alfa, beta, False)
             pasos_a, ruta_a = obtener_pasos_animacion(grafo, inicio, fin, alfa, beta, True)
+            
+            nodos_necesarios = set([inicio, fin])
+            for p in pasos_d + pasos_a:
+                nodos_necesarios.add(p["desde"])
+                nodos_necesarios.add(p["hasta"])
+            
+            nodos_json = {n: grafo.obtener_coordenadas(n) for n in nodos_necesarios if n in grafo.coordenadas}
+            aristas_json = []  # No se enviarán para no colapsar el navegador
+
             
             sim_key = st.session_state.get("sim_key", 0)
             
@@ -123,14 +126,6 @@ def mostrar_simulacion(grafo, inicio, fin, alfa, beta):
                         L.tileLayer('https://{{s}}.basemaps.cartocdn.com/light_all/{{z}}/{{x}}/{{y}}{{r}}.png', {{
                             attribution: '&copy; OpenStreetMap'
                         }}).addTo(m);
-                        
-                        edges.forEach(e => {{
-                            const p1 = nodes[e[0]];
-                            const p2 = nodes[e[1]];
-                            if(p1 && p2) {{
-                                L.polyline([p1, p2], {{color: '#E0E0E0', weight: 2, opacity: 0.5}}).addTo(m);
-                            }}
-                        }});
                         
                         L.circleMarker(nodes["{inicio}"], {{radius: 8, color: "green", fillColor: "green", fillOpacity: 1}}).addTo(m);
                         L.circleMarker(nodes["{fin}"], {{radius: 8, color: "gold", fillColor: "gold", fillOpacity: 1}}).addTo(m);

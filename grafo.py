@@ -35,13 +35,28 @@ class Grafo:
     def cantidad_aristas(self): return sum(len(v) for v in self.adyacencia.values())
 
 def construir_grafo(datos):
+    import pandas as pd
+    from datos import parse_coord_string
     grafo = Grafo()
     for _, fila in datos.iterrows():
-        grafo.agregar_nodo(fila["origen_nombre"], fila["origen_lat"], fila["origen_lon"])
-        grafo.agregar_nodo(fila["destino_nombre"], fila["destino_lat"], fila["destino_lon"])
+        origen_id = str(fila["origin"])
+        destino_id = str(fila["destination"])
+        
+        lat_o, lon_o = parse_coord_string(origen_id)
+        lat_d, lon_d = parse_coord_string(destino_id)
+        
+        grafo.agregar_nodo(origen_id, lat_o, lon_o)
+        grafo.agregar_nodo(destino_id, lat_d, lon_d)
+        
+        riesgo = fila["harassmentRisk"]
+        if pd.isna(riesgo): 
+            riesgo = 0.5
+            
+        nombre_calle = str(fila["name"]) if not pd.isna(fila["name"]) else "Desconocida"
+        
         grafo.agregar_arista(
-            fila["origen_nombre"], fila["destino_nombre"], fila["longitud"],
-            fila["riesgo_acoso"], fila["nombre"], fila["es_una_via"]
+            origen_id, destino_id, fila["length"],
+            riesgo, nombre_calle, fila["oneway"]
         )
     return grafo
 

@@ -2,7 +2,7 @@ import streamlit as st
 import folium
 import pandas as pd
 from streamlit_folium import st_folium
-from datos import cargar_red_vial, obtener_nombres_nodos, NODOS_MEDELLIN
+from datos import cargar_red_vial, obtener_nombres_nodos, NODOS_MEDELLIN, obtener_nodo_real_cercano
 from grafo import construir_grafo, dijkstra, a_estrella
 from animacion import mostrar_simulacion
 
@@ -12,22 +12,19 @@ st.set_page_config(page_title="Rutas Medellín", page_icon="🏙️", layout="wi
 def cargar_datos(): 
     return cargar_red_vial()
 
-def crear_mapa(grafo, res_dijkstra, res_a_estrella, inicio, fin):
+def crear_mapa(grafo, res_dijkstra, res_a_estrella, inicio_str, fin_str):
     mapa = folium.Map(location=[6.2442, -75.5812], zoom_start=13, tiles="CartoDB dark_matter")
-    for nodo in grafo.obtener_nodos():
-        co = grafo.obtener_coordenadas(nodo)
-        for a in grafo.obtener_vecinos(nodo):
-            cd = grafo.obtener_coordenadas(a["vecino"])
-            c = "#2ecc71" if a["riesgo"]<0.2 else "#f1c40f" if a["riesgo"]<0.4 else "#e67e22" if a["riesgo"]<0.6 else "#e74c3c"
-            folium.PolyLine([co, cd], color=c, weight=2, opacity=0.25).add_to(mapa)
+    
+    # NO dibujamos todas las aristas estáticas porque ahora son 68,000 y colapsaría el navegador.
+    # El mapa base CartoDB ya muestra las calles grises.
 
     for res, color, w, dash in [(res_dijkstra, "#3498db", 6, None), (res_a_estrella, "#e67e22", 6, "10")]:
         if res and res["encontrada"]:
             folium.PolyLine([grafo.obtener_coordenadas(n) for n in res["ruta"]], color=color, weight=w, opacity=0.9, dash_array=dash).add_to(mapa)
 
     for nombre, (lat, lon) in NODOS_MEDELLIN.items():
-        if nombre == inicio: folium.Marker([lat, lon], icon=folium.Icon(color="green")).add_to(mapa)
-        elif nombre == fin: folium.Marker([lat, lon], icon=folium.Icon(color="red")).add_to(mapa)
+        if nombre == inicio_str: folium.Marker([lat, lon], icon=folium.Icon(color="green")).add_to(mapa)
+        elif nombre == fin_str: folium.Marker([lat, lon], icon=folium.Icon(color="red")).add_to(mapa)
         else: folium.CircleMarker([lat, lon], radius=5, color="#ecf0f1", fill=True).add_to(mapa)
     return mapa
 
@@ -69,8 +66,12 @@ def main():
     tab1, tab2 = st.tabs(["Mapa de Rutas", "Simulación en Vivo (Dijkstra vs A*)"])
 
     with tab1:
-        rd = dijkstra(grafo, inicio, fin, alfa, beta)
-        ra = a_estrella(grafo, inicio, fin, alfa, beta)
+        # Convertir nombre amigable a nodo real del CSV
+        nodo_inicio = obtener_nodo_real_cercano(inicio, grafo.coordenadas)
+        nodo_fin = obtener_nodo_real_cercano(fin, grafo.coordenadas)
+        
+        rd = dijkstra(grafo, nodo_inicio, nodo_fin, alfa, beta)
+        ra = a_estrella(grafo, nodo_inicio, nodo_fin, alfa, beta)
     
         st_folium(crear_mapa(grafo, rd, ra, inicio, fin), width=None, height=500)
     
@@ -100,8 +101,10 @@ def main():
                 st.metric("Ahorro Tiempo A*", f"{abs(dt):.3f} ms", delta=f"{'rápido' if dt>0 else 'lento'}")
 
     with tab2:
-        # Llamamos al módulo externo para mantener este archivo limpio
-        mostrar_simulacion(grafo, inicio, fin, alfa, beta)
+        # Aquí también debemos usar los nodos reales
+        nodo_inicio = obtener_nodo_real_cercano(inicio, grafo.coordenadas)
+        nodo_fin = obtener_nodo_real_cercano(fin, grafo.coordenadas)
+        mostrar_simulacion(grafo, nodo_inicio, nodo_fin, alfa, beta)
 
 if __name__ == "__main__":
     main()
