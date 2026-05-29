@@ -29,11 +29,10 @@ NODOS_MEDELLIN = {
     "Universidad de Medellin": (6.2311, -75.6115),
 }
 
-# Cache de nodos para no recalcular
+# Cache
 _cache_nodos_cercanos = {}
 
 def cargar_red_vial(ruta_archivo="data/calles_de_medellin_con_acoso.csv"):
-    # Carga el dataset real gigante
     if os.path.exists(ruta_archivo):
         return pd.read_csv(ruta_archivo, sep=';')
     raise FileNotFoundError(f"No se encontró el dataset {ruta_archivo}")
@@ -45,8 +44,6 @@ def obtener_coordenadas(nombre_nodo):
     return NODOS_MEDELLIN.get(nombre_nodo)
 
 def parse_coord_string(coord_str):
-    # La coord viene como '(-75.5728593, 6.2115169)' -> (lon, lat)
-    # Devolvemos (lat, lon)
     try:
         tup = ast.literal_eval(coord_str)
         return (tup[1], tup[0])
@@ -54,10 +51,6 @@ def parse_coord_string(coord_str):
         return (0, 0)
 
 def obtener_nodo_real_cercano(nombre_poi, coordenadas_grafo):
-    """
-    Dado un nombre amigable (Ej: 'Poblado'), busca en todas las coordenadas del grafo
-    cuál es el ID del nodo más cercano físicamente usando distancia Haversine.
-    """
     if nombre_poi in _cache_nodos_cercanos:
         return _cache_nodos_cercanos[nombre_poi]
         
@@ -72,4 +65,6 @@ def obtener_nodo_real_cercano(nombre_poi, coordenadas_grafo):
             nodo_mas_cercano = nodo_id
             
     _cache_nodos_cercanos[nombre_poi] = nodo_mas_cercano
+
+    
     return nodo_mas_cercano

@@ -119,6 +119,7 @@ def algoritmo_base(grafo, inicio, fin, alfa, beta, usar_heuristica=False):
             continue
         visitados.add(actual)
         nodos_explorados += 1
+        
         if actual == fin:
             break
 
