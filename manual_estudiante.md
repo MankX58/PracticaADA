@@ -171,6 +171,48 @@ streamlit-folium
        └──────────┘
 ```
 
+### 2.6 Flujo Interno del Programa (Paso a Paso)
+
+Para entender cómo se comunican los archivos entre sí, este es el flujo de ejecución exacto cuando corres la aplicación:
+
+1. **Arranque y Carga de Datos:** Al ejecutar `interfaz.py`, lo primero que hace es llamar a `cargar_datos()` que viene de `datos.py`. Esta función carga la red vial (desde un CSV o generándola) y **retorna un DataFrame** (tabla) de pandas.
+2. **Construcción del Grafo:** Inmediatamente, `interfaz.py` toma ese DataFrame y se lo pasa a la función `construir_grafo(df)` de `grafo.py`. Esta función itera sobre la tabla, crea los nodos y aristas, y **retorna el objeto `Grafo`** (que internamente contiene la lista de adyacencia completa).
+3. **Interacción del Usuario:** El usuario, a través de la barra lateral (sidebar) de Streamlit, selecciona el `inicio`, el `fin`, y los parámetros `alfa` y `beta` (mediante las estrategias predefinidas o manualmente). 
+4. **Ejecución de Algoritmos:** Con estos 5 parámetros, `interfaz.py` llama a las funciones `dijkstra(grafo, inicio, fin, alfa, beta)` y `a_estrella(...)` importadas de `grafo.py`.
+5. **Retorno de Resultados:** Los algoritmos calculan la ruta óptima y no retornan solo un número, sino que **retornan un diccionario completo** de Python con toda la información necesaria:
+   ```python
+   # Ejemplo de lo que retorna el algoritmo a la interfaz
+   {
+       "encontrada": True,
+       "ruta": ["Poblado", "Estación Industriales", ..., "Aranjuez"],
+       "costo": 1450.5,
+       "distancia_total": 4500,
+       "riesgo_promedio": 0.25,
+       "nodos_explorados": 12,
+       "tiempo_ms": 2.5
+   }
+   ```
+6. **Visualización y Mapa:** `interfaz.py` extrae la lista `ruta` de ese diccionario y se la pasa a `crear_mapa(...)`. Esta función usa la librería `folium` para dibujar las líneas sobre un mapa oscuro, y retorna el objeto de mapa, que finalmente se renderiza en pantalla.
+7. **Pestaña de Animación:** Si el usuario pasa a la pestaña 2 y presiona "Iniciar Simulación", se invoca a `mostrar_simulacion(...)` en el archivo `animacion.py`. Para no bloquear el programa principal, este archivo realiza de nuevo la búsqueda guardando cada rama explorada (`obtener_pasos_animacion`) y genera un componente HTML interactivo en JavaScript que se incrusta en Streamlit.
+
+### 2.7 Conceptos Clave de Streamlit (`interfaz.py`)
+
+[Streamlit](https://streamlit.io/) es un framework que permite crear aplicaciones web interactivas directamente en Python, sin necesidad de escribir HTML o CSS desde cero. Cada vez que el usuario cambia un valor en la pantalla (ej. mueve un slider), **Streamlit vuelve a ejecutar todo el archivo de arriba a abajo** con los nuevos valores.
+
+Principales componentes utilizados en nuestro proyecto:
+
+| Sintaxis de Streamlit | ¿Para qué se usa en el proyecto? |
+|---|---|
+| `@st.cache_data` | Es un **decorador** crítico que se pone encima de `cargar_datos()`. Como Streamlit recarga el código ante cada clic, este decorador guarda el DataFrame en la memoria RAM (caché) para evitar leer el disco duro innecesariamente una y otra vez. |
+| `st.set_page_config(...)` | Configura elementos básicos de la página (título en la pestaña del navegador, usar todo el ancho de la pantalla `layout="wide"`). |
+| `st.sidebar:` | Todo lo que se escriba dentro del bloque `with st.sidebar:` aparecerá en el panel lateral izquierdo. Ahí pusimos los controles. |
+| `st.selectbox(...)` | Crea un menú desplegable. Lo usamos para que el usuario elija su punto de inicio y destino a partir de la lista de nodos. |
+| `st.pills(...)` | Crea botones de selección en forma de "píldoras". Lo usamos para que el usuario elija la estrategia predefinida (Rápida, Segura, Balance). |
+| `st.slider(...)` | Crea una barra deslizable para que el usuario escoja un número (en nuestro caso, los pesos de alfa y beta entre 0.0 y 1.0). |
+| `st.tabs(...)` | Divide el contenido principal en pestañas. Permite tener el mapa estático en una (`tab1`) y la animación en otra (`tab2`). |
+| `st.metric(...)` | Componente nativo para mostrar números grandes (KPIs). Lo usamos para mostrar la diferencia o "Ahorro" de tiempo y nodos de A*. |
+| `st.markdown(..., unsafe_allow_html=True)` | Permite inyectar texto con formato Markdown o código HTML directo. Lo usamos en la función `mostrar_metricas` para crear contenedores de métricas con colores personalizados. |
+
 ---
 
 ## 3. El Grafo: Modelado de la Red Vial

@@ -4,6 +4,7 @@ import pandas as pd
 from streamlit_folium import st_folium
 from datos import cargar_red_vial, obtener_nombres_nodos, NODOS_MEDELLIN
 from grafo import construir_grafo, dijkstra, a_estrella
+from animacion import mostrar_simulacion
 
 st.set_page_config(page_title="Rutas Medellín", page_icon="🏙️", layout="wide")
 
@@ -46,13 +47,13 @@ def main():
         st.header("Configuración")
         inicio = st.selectbox("Inicio", nodos, index=nodos.index("Poblado"))
         fin = st.selectbox("Destino", nodos, index=nodos.index("Aranjuez"))
-        st.markdown("### ⚖️ Prioridad de Ruta")
+        st.markdown("### Prioridad de Ruta")
         preset = st.pills(
             "Estrategia:", 
-            ["🚀 Ruta más Rápida", "🛡️ Ruta más Segura", "⚖️ Balance Perfecto", "🎛️ Ajuste Manual"], 
-            default="⚖️ Balance Perfecto"
+            ["Ruta más Rápida", "Ruta más Segura", "Balance Perfecto", "Ajuste Manual"], 
+            default="Balance Perfecto"
         )
-        if preset is None: preset = "⚖️ Balance Perfecto"
+        if preset is None: preset = "Balance Perfecto"
         
         if "Rápida" in preset: alfa, beta = 1.0, 0.0
         elif "Segura" in preset: alfa, beta = 0.0, 1.0
@@ -60,42 +61,47 @@ def main():
         else:
             alfa = st.slider("Distancia (α)", 0.0, 1.0, 0.5)
             beta = st.slider("Seguridad (β)", 0.0, 1.0, 0.5)
-
+ 
     if inicio == fin:
         st.warning("Inicio y destino deben ser diferentes.")
         return
 
-    rd = dijkstra(grafo, inicio, fin, alfa, beta)
-    ra = a_estrella(grafo, inicio, fin, alfa, beta)
+    tab1, tab2 = st.tabs(["Mapa de Rutas", "Simulación en Vivo (Dijkstra vs A*)"])
 
-    st_folium(crear_mapa(grafo, rd, ra, inicio, fin), width=None, height=500)
+    with tab1:
+        rd = dijkstra(grafo, inicio, fin, alfa, beta)
+        ra = a_estrella(grafo, inicio, fin, alfa, beta)
+    
+        st_folium(crear_mapa(grafo, rd, ra, inicio, fin), width=None, height=500)
+    
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.markdown('<h3 style="color: #3498db;">Dijkstra</h3>', unsafe_allow_html=True)
+            if rd["encontrada"]:
+                mostrar_metricas("Costo", f"{rd['costo']:.2f}", "#7fb8ff")
+                mostrar_metricas("Distancia", f"{rd['distancia_total']} m", "#7fb8ff")
+                mostrar_metricas("Riesgo", f"{rd['riesgo_promedio']:.2%}", "#7fb8ff")
+                mostrar_metricas("Nodos Exp", rd["nodos_explorados"], "#7fb8ff")
+                mostrar_metricas("Tiempo", f"{rd['tiempo_ms']:.3f} ms", "#7fb8ff")
+        with col2:
+            st.markdown('<h3 style="color: #e67e22;">A*</h3>', unsafe_allow_html=True)
+            if ra["encontrada"]:
+                mostrar_metricas("Costo", f"{ra['costo']:.2f}", "#ffb870")
+                mostrar_metricas("Distancia", f"{ra['distancia_total']} m", "#ffb870")
+                mostrar_metricas("Riesgo", f"{ra['riesgo_promedio']:.2%}", "#ffb870")
+                mostrar_metricas("Nodos Exp", ra["nodos_explorados"], "#ffb870")
+                mostrar_metricas("Tiempo", f"{ra['tiempo_ms']:.3f} ms", "#ffb870")
+        with col3:
+            st.subheader("Comparación")
+            if rd["encontrada"] and ra["encontrada"]:
+                dn = rd["nodos_explorados"] - ra["nodos_explorados"]
+                dt = rd["tiempo_ms"] - ra["tiempo_ms"]
+                st.metric("Ahorro Nodos A*", f"{abs(dn)}", delta=f"{'menos' if dn>0 else 'más'}")
+                st.metric("Ahorro Tiempo A*", f"{abs(dt):.3f} ms", delta=f"{'rápido' if dt>0 else 'lento'}")
 
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown('<h3 style="color: #3498db;">Dijkstra</h3>', unsafe_allow_html=True)
-        if rd["encontrada"]:
-            mostrar_metricas("Costo", f"{rd['costo']:.2f}", "#7fb8ff")
-            mostrar_metricas("Distancia", f"{rd['distancia_total']} m", "#7fb8ff")
-            mostrar_metricas("Riesgo", f"{rd['riesgo_promedio']:.2%}", "#7fb8ff")
-            mostrar_metricas("Nodos Exp", rd["nodos_explorados"], "#7fb8ff")
-            mostrar_metricas("Tiempo", f"{rd['tiempo_ms']:.3f} ms", "#7fb8ff")
-    with col2:
-        st.markdown('<h3 style="color: #e67e22;">A*</h3>', unsafe_allow_html=True)
-        if ra["encontrada"]:
-            mostrar_metricas("Costo", f"{ra['costo']:.2f}", "#ffb870")
-            mostrar_metricas("Distancia", f"{ra['distancia_total']} m", "#ffb870")
-            mostrar_metricas("Riesgo", f"{ra['riesgo_promedio']:.2%}", "#ffb870")
-            mostrar_metricas("Nodos Exp", ra["nodos_explorados"], "#ffb870")
-            mostrar_metricas("Tiempo", f"{ra['tiempo_ms']:.3f} ms", "#ffb870")
-    with col3:
-        st.subheader("Comparación")
-        if rd["encontrada"] and ra["encontrada"]:
-            dn = rd["nodos_explorados"] - ra["nodos_explorados"]
-            dt = rd["tiempo_ms"] - ra["tiempo_ms"]
-            st.metric("Ahorro Nodos A*", f"{abs(dn)}", delta=f"{'menos' if dn>0 else 'más'}")
-            st.metric("Ahorro Tiempo A*", f"{abs(dt):.3f} ms", delta=f"{'rápido' if dt>0 else 'lento'}")
-
-
+    with tab2:
+        # Llamamos al módulo externo para mantener este archivo limpio
+        mostrar_simulacion(grafo, inicio, fin, alfa, beta)
 
 if __name__ == "__main__":
     main()
