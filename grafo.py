@@ -2,7 +2,8 @@ import heapq
 import math
 import time
 from datos import distancia_haversine
-
+import pandas as pd
+from datos import parse_coord_string
 
 def calcular_costo(longitud, riesgo, alfa, beta):
     return alfa * longitud + beta * riesgo
@@ -19,7 +20,8 @@ class Grafo:
 
     def agregar_arista(self, origen, destino, longitud_metros, riesgo, nombre_calle, es_una_via=False):
         for n in (origen, destino):
-            if n not in self.adyacencia: self.adyacencia[n] = []
+            if n not in self.adyacencia:
+                self.adyacencia[n] = []
             
         arista = {"vecino": destino, "longitud": longitud_metros, "riesgo": riesgo, "calle": nombre_calle}
         self.adyacencia[origen].append(arista)
@@ -40,8 +42,7 @@ class Grafo:
         return sum(len(v) for v in self.adyacencia.values())
 
 def construir_grafo(datos):
-    import pandas as pd
-    from datos import parse_coord_string
+    
     grafo = Grafo()
     for _, fila in datos.iterrows():
         origen_id = str(fila["origin"])

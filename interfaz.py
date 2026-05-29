@@ -14,9 +14,6 @@ def cargar_datos():
 
 def crear_mapa(grafo, res_dijkstra, res_a_estrella, inicio_str, fin_str):
     mapa = folium.Map(location=[6.2442, -75.5812], zoom_start=13, tiles="CartoDB dark_matter")
-    
-    # NO dibujamos todas las aristas estáticas porque ahora son 68,000 y colapsaría el navegador.
-    # El mapa base CartoDB ya muestra las calles grises.
 
     for res, color, w, dash in [(res_dijkstra, "#3498db", 6, None), (res_a_estrella, "#e67e22", 6, "10")]:
         if res and res["encontrada"]:
@@ -65,7 +62,6 @@ def main():
     tab1, tab2 = st.tabs(["Mapa de Rutas", "Simulación en Vivo (Dijkstra vs A*)"])
 
     with tab1:
-        # Convertir nombre amigable a nodo real del CSV
         nodo_inicio = obtener_nodo_real_cercano(inicio, grafo.coordenadas)
         nodo_fin = obtener_nodo_real_cercano(fin, grafo.coordenadas)
         
@@ -75,6 +71,7 @@ def main():
         st_folium(crear_mapa(grafo, rd, ra, inicio, fin), width=None, height=500)
     
         col1, col2, col3 = st.columns(3)
+        
         with col1:
             st.markdown('<h3 style="color: #3498db;">Dijkstra</h3>', unsafe_allow_html=True)
             if rd["encontrada"]:

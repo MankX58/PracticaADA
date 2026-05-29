@@ -56,7 +56,7 @@ def obtener_nodo_real_cercano(nombre_poi, coordenadas_grafo):
         
     lat_poi, lon_poi = NODOS_MEDELLIN[nombre_poi]
     nodo_mas_cercano = None
-    distancia_minima = float('inf')
+    distancia_minima = float('inf')     
     
     for nodo_id, (lat_real, lon_real) in coordenadas_grafo.items():
         d = distancia_haversine(lat_poi, lon_poi, lat_real, lon_real)
@@ -66,5 +66,5 @@ def obtener_nodo_real_cercano(nombre_poi, coordenadas_grafo):
             
     _cache_nodos_cercanos[nombre_poi] = nodo_mas_cercano
 
-    
+
     return nodo_mas_cercano
