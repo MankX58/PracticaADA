@@ -28,11 +28,16 @@ class Grafo:
             arista_inv = {"vecino": origen, "longitud": longitud_metros, "riesgo": riesgo, "calle": nombre_calle}
             self.adyacencia[destino].append(arista_inv)
 
-    def obtener_vecinos(self, nodo): return self.adyacencia.get(nodo, [])
-    def obtener_nodos(self): return list(self.adyacencia.keys())
-    def obtener_coordenadas(self, nodo): return self.coordenadas.get(nodo)
-    def cantidad_nodos(self): return len(self.adyacencia)
-    def cantidad_aristas(self): return sum(len(v) for v in self.adyacencia.values())
+    def obtener_vecinos(self, nodo): 
+        return self.adyacencia.get(nodo, [])
+    def obtener_nodos(self): 
+        return list(self.adyacencia.keys())
+    def obtener_coordenadas(self, nodo): 
+        return self.coordenadas.get(nodo)
+    def cantidad_nodos(self): 
+        return len(self.adyacencia)
+    def cantidad_aristas(self): 
+        return sum(len(v) for v in self.adyacencia.values())
 
 def construir_grafo(datos):
     import pandas as pd
@@ -137,22 +142,11 @@ def algoritmo_base(grafo, inicio, fin, alfa, beta, usar_heuristica=False):
     return _reconstruir_ruta(fin, distancias, predecesores, aristas_usadas, (time.perf_counter() - t0)*1000, nodos_explorados)
 
 def dijkstra(grafo, inicio, fin, alfa=1.0, beta=0.0):
-    """
-    Complejidad:
-    - Temporal: O(n log n), donde n es el número de nodos.
-      Insertar y extraer del min-heap toma O(log n), y en el peor caso se hace 
-      para cada calle o intersección.
-    - Espacial: O(n) para la representación del grafo en lista de adyacencia,
-      y estructuras auxiliares.
-    """
     return algoritmo_base(grafo, inicio, fin, alfa, beta, usar_heuristica=False)
+    # Complejidad Temporal: O(n log n)
+    # Complejidad Espacial: O(n)
 
 def a_estrella(grafo, inicio, fin, alfa=1.0, beta=0.0):
-    """
-    Complejidad:
-    - Temporal: O(n log n) en el peor caso teórico. Sin embargo, en la 
-      práctica explora significativamente menos nodos que Dijkstra gracias a la 
-      heurística espacial que dirige la búsqueda hacia el destino.
-    - Espacial: O(n) idéntico a Dijkstra.
-    """
     return algoritmo_base(grafo, inicio, fin, alfa, beta, usar_heuristica=True)
+    # Complejidad Temporal: O(n log n) 
+    # Complejidad Espacial: O(n)
