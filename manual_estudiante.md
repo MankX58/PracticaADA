@@ -1,0 +1,1208 @@
+# 🗺️ Rutas Óptimas y Seguras en Medellín
+
+## Proyecto Final — Análisis y Diseño de Algoritmos (ADA)
+
+---
+
+| Campo | Detalle |
+|---|---|
+| **Materia** | Análisis y Diseño de Algoritmos (ADA) |
+| **Semestre** | Segundo año — Ingeniería de Sistemas |
+| **Integrantes** | ___________________________, ___________________________ |
+| **Docente** | ___________________________ |
+| **Fecha de entrega** | ___________________________ |
+| **Institución** | ___________________________ |
+
+---
+
+> **Nota para el estudiante:** Este documento es tu guía completa para comprender, ejecutar y sustentar el proyecto. Léelo con calma, practica los ejemplos y prepara las preguntas de la sección 13 antes de la sustentación.
+
+---
+
+## Tabla de Contenidos
+
+1. [Introducción](#1-introducción)
+2. [Estructura del Proyecto](#2-estructura-del-proyecto)
+3. [El Grafo: Modelado de la Red Vial](#3-el-grafo-modelado-de-la-red-vial)
+4. [La Función de Costo](#4-la-función-de-costo)
+5. [Algoritmo de Dijkstra](#5-algoritmo-de-dijkstra)
+6. [Algoritmo A* (A-Estrella)](#6-algoritmo-a-a-estrella)
+7. [Comparación entre Dijkstra y A*](#7-comparación-entre-dijkstra-y-a)
+8. [Análisis de Complejidad Detallado](#8-análisis-de-complejidad-detallado)
+9. [Técnicas de Diseño Utilizadas](#9-técnicas-de-diseño-utilizadas)
+10. [Guía de Instalación y Ejecución](#10-guía-de-instalación-y-ejecución)
+11. [Guía de Uso de la Interfaz](#11-guía-de-uso-de-la-interfaz)
+12. [Preguntas Frecuentes para la Sustentación](#12-preguntas-frecuentes-para-la-sustentación)
+13. [Referencias](#13-referencias)
+
+---
+
+## 1. Introducción
+
+### 1.1 Contexto del Problema
+
+Medellín, como toda gran ciudad latinoamericana, enfrenta retos significativos en materia de **movilidad y seguridad urbana**. Cuando un ciudadano necesita trasladarse de un punto a otro, no solo busca la ruta más corta en términos de distancia, sino también una ruta que minimice la exposición a **zonas de riesgo** (zonas con alta incidencia de acoso callejero, robos o inseguridad percibida).
+
+Este es un problema de **optimización multicriterio** sobre grafos: queremos encontrar la mejor ruta considerando simultáneamente dos factores:
+
+- **Longitud del trayecto** (distancia física en metros).
+- **Nivel de riesgo** (índice de peligrosidad de cada tramo).
+
+### 1.2 Objetivo del Proyecto
+
+Diseñar e implementar una aplicación que, utilizando algoritmos clásicos de caminos más cortos (**Dijkstra** y **A\***), permita encontrar rutas óptimas en la red vial de Medellín, ponderando distancia y seguridad según las preferencias del usuario.
+
+### 1.3 ¿Por qué es relevante para ADA?
+
+Este proyecto integra los conceptos fundamentales de la materia:
+
+| Concepto de ADA | Aplicación en el proyecto |
+|---|---|
+| Grafos y representaciones | Red vial como grafo ponderado |
+| Algoritmos voraces (Greedy) | Dijkstra y A* |
+| Programación dinámica | Subestructura óptima en caminos mínimos |
+| Estructuras de datos | Diccionarios, colas de prioridad (heapq) |
+| Análisis de complejidad | Comparación teórica y experimental |
+| Heurísticas | Distancia Haversine en A* |
+
+---
+
+## 2. Estructura del Proyecto
+
+El proyecto se organiza en **5 archivos**, cada uno con una responsabilidad clara siguiendo el principio de **separación de responsabilidades**:
+
+```
+PracticaADA/
+│
+├── datos.py            # 📊 Módulo de datos (nodos y aristas)
+├── grafo.py            # 🔗 Lógica del grafo y algoritmos
+├── principal.py        # 💻 Interfaz de consola
+├── interfaz.py         # 🌐 Interfaz web (Streamlit)
+├── requirements.txt    # 📦 Dependencias del proyecto
+└── manual_estudiante.md # 📖 Este documento
+```
+
+### 2.1 `datos.py` — Módulo de Datos
+
+**Responsabilidad:** Contener y proveer toda la información geográfica y de conectividad de la red vial.
+
+**Contenido:**
+- **25 nodos**: Lugares reales de Medellín (parques, estaciones de metro, universidades, etc.) con sus coordenadas GPS reales (latitud, longitud).
+- **~50 aristas**: Conexiones entre nodos representando calles o vías, cada una con:
+  - `longitud`: Distancia en metros.
+  - `riesgo`: Índice de peligrosidad (valor entre 0 y 10).
+
+**Funciones principales:**
+
+| Función | Descripción |
+|---|---|
+| `generar_datos_simulados()` | Genera el DataFrame con nodos y aristas predefinidos |
+| `cargar_red_vial(ruta_archivo=None)` | Carga datos desde archivo CSV o usa los predefinidos |
+| `obtener_nombres_nodos()` | Retorna lista de nombres de todos los nodos |
+| `obtener_coordenadas(nombre)` | Retorna (latitud, longitud) de un nodo dado |
+
+### 2.2 `grafo.py` — Lógica del Grafo y Algoritmos
+
+**Responsabilidad:** Definir la estructura del grafo, la función de costo y los algoritmos de camino más corto.
+
+**Componentes clave:**
+
+| Componente | Descripción |
+|---|---|
+| Clase `Grafo` | Grafo con lista de adyacencia usando diccionarios de Python |
+| `calcular_costo(longitud, riesgo, alfa, beta)` | Calcula C(e) = α × longitud + β × riesgo |
+| `distancia_haversine(lat1, lon1, lat2, lon2)` | Distancia en línea recta sobre la esfera terrestre |
+| `dijkstra(grafo, inicio, fin, alfa, beta)` | Algoritmo de Dijkstra con cola de prioridad |
+| `a_estrella(grafo, inicio, fin, alfa, beta)` | Algoritmo A* con heurística Haversine |
+| `construir_grafo(datos_df)` | Construye el grafo a partir del DataFrame de datos |
+
+### 2.3 `principal.py` — Interfaz de Consola
+
+**Responsabilidad:** Punto de entrada principal para ejecución por línea de comandos.
+
+**Flujo de ejecución:**
+```
+1. Cargar datos (datos.py)
+2. Construir grafo (grafo.py)
+3. Mostrar lista de nodos disponibles
+4. Solicitar al usuario: origen, destino, α, β
+5. Ejecutar Dijkstra y A*
+6. Imprimir comparación de resultados
+7. Generar mapa HTML con folium
+```
+
+### 2.4 `interfaz.py` — Interfaz Web con Streamlit
+
+**Responsabilidad:** Proveer una interfaz gráfica interactiva y visualmente atractiva.
+
+**Características:**
+- Selectboxes para origen y destino.
+- Sliders para ajustar α (peso de distancia) y β (peso de riesgo).
+- Mapa interactivo con `folium` que muestra las rutas trazadas.
+- Métricas comparativas entre Dijkstra y A*.
+- Tablas de detalle de cada ruta (nodo por nodo).
+- Sección de análisis experimental con gráficas de rendimiento.
+
+### 2.5 `requirements.txt` — Dependencias
+
+```
+pandas
+folium
+streamlit
+streamlit-folium
+```
+
+### 2.6 Diagrama de Relaciones entre Módulos
+
+```
+┌─────────────┐
+│  datos.py   │  ← Provee nodos, aristas, coordenadas
+└──────┬──────┘
+       │ DataFrame
+       ▼
+┌─────────────┐
+│  grafo.py   │  ← Construye el grafo, ejecuta algoritmos
+└──┬───────┬──┘
+   │       │
+   ▼       ▼
+┌──────┐ ┌──────────┐
+│princ.│ │interfaz. │  ← Interfaces de usuario
+│ .py  │ │   .py    │
+└──────┘ └──────────┘
+```
+
+---
+
+## 3. El Grafo: Modelado de la Red Vial
+
+### 3.1 ¿Qué es un grafo?
+
+Un **grafo** es una estructura matemática compuesta por:
+- **Vértices (V)** o **nodos**: Entidades individuales (en nuestro caso, lugares de Medellín).
+- **Aristas (E)** o **edges**: Conexiones entre pares de vértices (en nuestro caso, calles o vías).
+
+Formalmente: **G = (V, E)** donde V es el conjunto de vértices y E es el conjunto de aristas.
+
+### 3.2 Clasificación de Nuestro Grafo
+
+Nuestro grafo es:
+
+| Propiedad | Valor | Justificación |
+|---|---|---|
+| **Dirigido/No dirigido** | No dirigido | Las calles se pueden recorrer en ambos sentidos |
+| **Ponderado/No ponderado** | Ponderado | Cada arista tiene longitud y riesgo |
+| **Conexo** | Sí | Todos los nodos son alcanzables entre sí |
+| **Cíclico** | Sí | Existen ciclos (como en una red vial real) |
+
+### 3.3 Representación en Memoria: Lista de Adyacencia
+
+Existen varias formas de representar un grafo en memoria. Las dos más comunes son:
+
+**Opción 1: Matriz de Adyacencia**
+```
+     A    B    C    D
+A  [ 0,   5,   ∞,   3 ]
+B  [ 5,   0,   2,   ∞ ]
+C  [ ∞,   2,   0,   7 ]
+D  [ 3,   ∞,   7,   0 ]
+```
+- Espacio: **O(V²)**
+- Acceso a arista (i,j): **O(1)**
+- Iterar vecinos de un nodo: **O(V)**
+
+**Opción 2: Lista de Adyacencia (la que usamos ✅)**
+```
+A → [(B, peso=5), (D, peso=3)]
+B → [(A, peso=5), (C, peso=2)]
+C → [(B, peso=2), (D, peso=7)]
+D → [(A, peso=3), (C, peso=7)]
+```
+- Espacio: **O(V + E)**
+- Acceso a arista (i,j): **O(grado(i))**
+- Iterar vecinos de un nodo: **O(grado(i))**
+
+### 3.4 ¿Por qué elegimos Lista de Adyacencia?
+
+| Criterio | Matriz de Adyacencia | Lista de Adyacencia |
+|---|---|---|
+| Espacio con 25 nodos y 50 aristas | 25 × 25 = 625 celdas | 25 + 2×50 = 125 entradas |
+| Grafos dispersos (pocas aristas) | Desperdicia mucha memoria | ✅ Eficiente |
+| Iterar vecinos | O(V) = O(25) | ✅ O(grado) ≈ O(4) |
+| Dijkstra/A* necesitan | Iterar vecinos frecuentemente | ✅ Óptimo para esto |
+
+**Conclusión:** Para un grafo **disperso** (sparse) como una red vial donde cada intersección conecta con pocas calles, la lista de adyacencia es **significativamente más eficiente**.
+
+### 3.5 Implementación con Diccionarios de Python
+
+En Python, implementamos la lista de adyacencia usando **diccionarios anidados**, lo que nos da acceso promedio **O(1)** por clave:
+
+```python
+# Estructura interna del grafo
+grafo.adyacencia = {
+    "Parque Berrío": {
+        "Parque de Bolívar": {"longitud": 450, "riesgo": 3},
+        "Estación Prado":    {"longitud": 300, "riesgo": 2}
+    },
+    "Parque de Bolívar": {
+        "Parque Berrío":     {"longitud": 450, "riesgo": 3},
+        "Catedral":          {"longitud": 200, "riesgo": 1}
+    },
+    # ... más nodos
+}
+```
+
+**Ventajas de usar diccionarios:**
+- Acceso por nombre (no por índice numérico): `grafo["Parque Berrío"]`
+- Búsqueda de vecinos en **O(1)** promedio.
+- Código legible y Pythónico.
+
+### 3.6 Diagrama Conceptual: Subgrafo de Ejemplo
+
+```
+                    450m, riesgo=3
+    ┌──────────────────────────────────────┐
+    │                                      │
+    ▼                                      ▼
+┌──────────┐    300m, r=2    ┌───────────────┐    200m, r=1    ┌──────────┐
+│ Parque   │ ◄─────────────► │   Estación    │ ◄─────────────► │ Catedral │
+│ Berrío   │                 │    Prado      │                 │Metropol. │
+└──────────┘                 └───────────────┘                 └──────────┘
+    │                                                               │
+    │            500m, riesgo=5                                     │
+    └──────────────────────────────────────────────────────────────┘
+```
+
+### 3.7 Complejidad Espacial del Grafo
+
+| Componente | Complejidad |
+|---|---|
+| Almacenar V nodos | O(V) |
+| Almacenar E aristas (cada una en ambas direcciones) | O(E) |
+| **Total** | **O(V + E)** |
+
+Con nuestros datos: O(25 + 50) = O(75) — muy eficiente en memoria.
+
+---
+
+## 4. La Función de Costo
+
+### 4.1 Definición Formal
+
+La función de costo para cada arista **e** se define como:
+
+```
+C(e) = α × longitud(e) + β × riesgo(e)
+```
+
+Donde:
+- **C(e)**: Costo total de atravesar la arista e.
+- **α (alfa)**: Peso que el usuario asigna a la **distancia**. Valor entre 0 y 1.
+- **β (beta)**: Peso que el usuario asigna al **riesgo**. Valor entre 0 y 1.
+- **longitud(e)**: Distancia física de la arista en metros.
+- **riesgo(e)**: Índice de peligrosidad (0 = seguro, 10 = muy peligroso).
+
+### 4.2 Interpretación Intuitiva
+
+| Escenario | α | β | Significado |
+|---|---|---|---|
+| "Quiero llegar rápido, no me importa el riesgo" | 1.0 | 0.0 | Solo minimiza distancia |
+| "Quiero la ruta más segura, no importa si es larga" | 0.0 | 1.0 | Solo minimiza riesgo |
+| "Balance entre distancia y seguridad" | 0.5 | 0.5 | Pondera ambos factores por igual |
+| "Priorizo seguridad pero considero distancia" | 0.3 | 0.7 | Mayor peso al riesgo |
+
+### 4.3 Ejemplo Numérico
+
+Consideremos una arista entre "Parque Berrío" y "Estación Prado":
+- Longitud = 300 metros
+- Riesgo = 6
+
+**Caso 1: Solo distancia (α=1.0, β=0.0)**
+```
+C(e) = 1.0 × 300 + 0.0 × 6 = 300
+```
+
+**Caso 2: Solo seguridad (α=0.0, β=1.0)**
+```
+C(e) = 0.0 × 300 + 1.0 × 6 = 6
+```
+
+**Caso 3: Balance (α=0.5, β=0.5)**
+```
+C(e) = 0.5 × 300 + 0.5 × 6 = 150 + 3 = 153
+```
+
+**Caso 4: Priorizar seguridad (α=0.3, β=0.7)**
+```
+C(e) = 0.3 × 300 + 0.7 × 6 = 90 + 4.2 = 94.2
+```
+
+### 4.4 ¿Por qué una combinación lineal?
+
+La combinación lineal es la forma más simple de **escalarización** en optimización multicriterio. Sus ventajas:
+
+1. **Simplicidad**: Fácil de entender e implementar.
+2. **Controlabilidad**: El usuario ajusta directamente los pesos.
+3. **Garantía**: Para cualquier combinación válida de α y β, la función sigue siendo un peso positivo válido para aristas, lo que garantiza que Dijkstra y A* funcionan correctamente.
+
+> **⚠️ Importante:** Para que los algoritmos funcionen correctamente, se requiere que **C(e) ≥ 0** para toda arista. Como longitud ≥ 0, riesgo ≥ 0, α ≥ 0 y β ≥ 0, esta condición siempre se cumple.
+
+### 4.5 Efecto en las Rutas: Ejemplo Visual
+
+```
+Ruta A (corta pero peligrosa):        Ruta B (larga pero segura):
+  X ───(200m, r=8)──── Y               X ──(150m, r=1)── Z ──(200m, r=1)── Y
+                                              Total: 350m, riesgo total=2
+
+Con α=1.0, β=0.0:  Ruta A gana (200 < 350)
+Con α=0.0, β=1.0:  Ruta B gana (2 < 8)
+Con α=0.5, β=0.5:  Ruta A = 0.5×200 + 0.5×8 = 104
+                    Ruta B = 0.5×350 + 0.5×2 = 176  → Ruta A gana
+Con α=0.2, β=0.8:  Ruta A = 0.2×200 + 0.8×8 = 46.4
+                    Ruta B = 0.2×350 + 0.8×2 = 71.6  → Ruta A gana
+Con α=0.1, β=0.9:  Ruta A = 0.1×200 + 0.9×8 = 27.2
+                    Ruta B = 0.1×350 + 0.9×2 = 36.8  → Ruta A gana
+Con α=0.0, β=1.0:  Ruta A = 8, Ruta B = 2 → Ruta B gana
+```
+
+Esto ilustra cómo **cambiar los pesos puede cambiar completamente la ruta óptima**.
+
+---
+
+## 5. Algoritmo de Dijkstra
+
+### 5.1 Idea General
+
+El algoritmo de Dijkstra encuentra el **camino más corto** desde un nodo origen a todos los demás nodos en un grafo con pesos **no negativos**.
+
+Fue inventado por **Edsger W. Dijkstra** en 1956 y publicado en 1959. Es uno de los algoritmos más importantes en ciencias de la computación.
+
+### 5.2 Intuición: La Analogía del Agua
+
+Imagina que viertes agua en el nodo origen. El agua fluye por todas las aristas, pero más lento por las aristas con mayor peso (costo). El primer chorro que llega a cada nodo determina el camino más corto.
+
+```
+    Tiempo 0:        Tiempo 1:        Tiempo 2:        Tiempo 3:
+    
+    [A]══►           [A]──►[B]        [A]──►[B]──►[C]  [A]──►[B]──►[C]
+     ║                ║                 ║                 ║         │
+     ║                ▼                 ▼                 ▼         ▼
+     ╚══►            [D]              [D]               [D]──────►[E]
+     
+    (A confirmado)   (B,D confirm.)   (C confirmado)    (E confirmado)
+```
+
+### 5.3 Pseudocódigo
+
+```
+ALGORITMO Dijkstra(Grafo G, nodo inicio, nodo fin, α, β):
+    
+    // 1. INICIALIZACIÓN
+    PARA CADA nodo v EN G:
+        distancia[v] ← ∞          // Distancia tentativa: infinito
+        predecesor[v] ← NULL      // Nodo anterior en el camino óptimo
+    
+    distancia[inicio] ← 0         // Distancia al origen es 0
+    
+    // 2. COLA DE PRIORIDAD (min-heap)
+    cola ← nueva ColaDePrioridad()
+    cola.insertar( (0, inicio) )   // (prioridad=0, nodo=inicio)
+    
+    visitados ← conjunto vacío
+    
+    // 3. BUCLE PRINCIPAL
+    MIENTRAS cola NO esté vacía:
+        (costo_actual, nodo_actual) ← cola.extraer_mínimo()
+        
+        // Si ya visitamos este nodo, saltar
+        SI nodo_actual ∈ visitados:
+            CONTINUAR
+        
+        // Marcar como visitado (su distancia es definitiva)
+        visitados.agregar(nodo_actual)
+        
+        // ¿Llegamos al destino?
+        SI nodo_actual == fin:
+            RETORNAR reconstruir_camino(predecesor, inicio, fin), distancia[fin]
+        
+        // 4. RELAJACIÓN DE VECINOS
+        PARA CADA vecino DE nodo_actual:
+            SI vecino ∉ visitados:
+                // Calcular costo de la arista
+                peso ← α × longitud(nodo_actual, vecino) + β × riesgo(nodo_actual, vecino)
+                nueva_distancia ← distancia[nodo_actual] + peso
+                
+                // ¿Encontramos un camino mejor?
+                SI nueva_distancia < distancia[vecino]:
+                    distancia[vecino] ← nueva_distancia
+                    predecesor[vecino] ← nodo_actual
+                    cola.insertar( (nueva_distancia, vecino) )
+    
+    // 5. No se encontró camino
+    RETORNAR NULL, ∞
+```
+
+### 5.4 ¿Por qué funciona? — Propiedad de Subestructura Óptima
+
+Dijkstra se basa en un principio fundamental:
+
+> **Principio de optimalidad de Bellman:** Si el camino más corto de A a C pasa por B, entonces el subcamino de A a B también es el camino más corto de A a B.
+
+```
+Si el camino óptimo es:  A → B → C → D → E
+
+Entonces NECESARIAMENTE:
+  - A → B              es el camino óptimo de A a B
+  - A → B → C          es el camino óptimo de A a C
+  - A → B → C → D      es el camino óptimo de A a D
+```
+
+Esto permite que el algoritmo "confirme" nodos de forma progresiva: una vez que un nodo sale de la cola de prioridad con el menor costo, **su distancia es definitiva**.
+
+### 5.5 La Cola de Prioridad: `heapq`
+
+#### ¿Qué es una cola de prioridad?
+
+Una **cola de prioridad** es una estructura de datos donde cada elemento tiene una prioridad, y siempre se extrae primero el elemento con **menor prioridad**.
+
+**Analogía:** Piensa en la sala de urgencias de un hospital. Los pacientes no se atienden por orden de llegada, sino por **gravedad** (prioridad). El paciente más grave siempre se atiende primero, sin importar cuándo llegó.
+
+#### Implementación con `heapq` (Min-Heap)
+
+Python provee el módulo `heapq` que implementa un **min-heap** (montículo mínimo):
+
+```
+              (2, "A")           ← Mínimo siempre arriba
+             /         \
+        (5, "B")    (3, "C")
+        /     \
+   (7, "D") (8, "E")
+```
+
+**Operaciones y complejidades:**
+
+| Operación | Método | Complejidad |
+|---|---|---|
+| Insertar | `heapq.heappush(cola, (prioridad, nodo))` | O(log V) |
+| Extraer mínimo | `heapq.heappop(cola)` | O(log V) |
+| Ver mínimo sin extraer | `cola[0]` | O(1) |
+
+#### ¿Por qué no una lista simple?
+
+| Operación | Lista (sin ordenar) | Lista (ordenada) | Heap (heapq) |
+|---|---|---|---|
+| Insertar | O(1) | O(V) | **O(log V)** |
+| Extraer mínimo | O(V) | O(1) | **O(log V)** |
+| **Ambas operaciones** | **O(V)** | **O(V)** | **O(log V) ✅** |
+
+El heap ofrece el **mejor balance** entre inserción y extracción.
+
+### 5.6 Ejemplo Paso a Paso
+
+Consideremos este mini-grafo con **α=1.0, β=0.0** (solo distancia):
+
+```
+         100
+    A ─────────── B
+    │             │
+ 50 │             │ 30
+    │             │
+    C ─────────── D
+         60
+```
+
+**Objetivo:** Camino más corto de A a D.
+
+| Paso | Cola de Prioridad | Extraer | Vecinos relajados | distancia[] |
+|---|---|---|---|---|
+| Inicio | [(0, A)] | — | — | A=0, B=∞, C=∞, D=∞ |
+| 1 | [] | **(0, A)** | B→100, C→50 | A=0, B=100, C=50, D=∞ |
+| 2 | [(50,C), (100,B)] | **(50, C)** | D→50+60=110 | A=0, B=100, C=50, D=110 |
+| 3 | [(100,B), (110,D)] | **(100, B)** | D→100+30=130 (no mejora) | A=0, B=100, C=50, D=110 |
+| 4 | [(110,D)] | **(110, D)** | ¡Destino alcanzado! | A=0, B=100, C=50, **D=110** |
+
+**Resultado:** Ruta óptima A → C → D con costo 110.
+
+> Nótese que la ruta A → B → D tiene costo 130, que es mayor. Dijkstra correctamente la descartó.
+
+### 5.7 Complejidad
+
+| Tipo | Complejidad | Explicación |
+|---|---|---|
+| **Temporal** | **O((V + E) log V)** | Cada nodo se extrae del heap una vez: O(V log V). Cada arista se relaja una vez con inserción al heap: O(E log V). |
+| **Espacial** | **O(V)** | Almacenar distancias, predecesores y la cola. |
+
+---
+
+## 6. Algoritmo A* (A-Estrella)
+
+### 6.1 Motivación: ¿Podemos hacer algo mejor que Dijkstra?
+
+Dijkstra explora nodos en **todas las direcciones** por igual. Si queremos ir de un punto en el sur a uno en el norte, Dijkstra también explorará innecesariamente nodos al sur, al este y al oeste.
+
+```
+Dijkstra explora así:          A* explora así:
+(en todas direcciones)         (dirigido hacia el destino)
+
+         * * *                        *
+       * * * * *                    * * *
+     * * * S * * *                * * S * *
+       * * * * *                    * * *
+         * * *                    * * * *
+                                    * D
+           D                    
+```
+
+**A\*** usa **información adicional** (una heurística) para dirigir la búsqueda hacia el destino, explorando menos nodos.
+
+### 6.2 La Función f(n) = g(n) + h(n)
+
+A* evalúa cada nodo usando tres valores:
+
+| Componente | Significado | Cálculo |
+|---|---|---|
+| **g(n)** | Costo **real** acumulado desde el origen hasta n | Suma de costos de aristas recorridas |
+| **h(n)** | Costo **estimado** (heurística) desde n hasta el destino | Distancia Haversine (línea recta) |
+| **f(n)** | Costo **total estimado** del camino pasando por n | f(n) = g(n) + h(n) |
+
+**Diferencia clave con Dijkstra:**
+- **Dijkstra** ordena la cola de prioridad por **g(n)** (costo acumulado real).
+- **A\*** ordena la cola de prioridad por **f(n) = g(n) + h(n)** (costo real + estimación).
+
+### 6.3 La Heurística: Distancia Haversine
+
+La **distancia Haversine** calcula la distancia en línea recta entre dos puntos en la superficie de la Tierra, usando sus coordenadas de latitud y longitud.
+
+**Fórmula:**
+
+```
+a = sin²(Δlat/2) + cos(lat₁) × cos(lat₂) × sin²(Δlon/2)
+c = 2 × arctan2(√a, √(1-a))
+d = R × c
+
+Donde R = 6,371,000 metros (radio de la Tierra)
+```
+
+#### ¿Por qué es una buena heurística?
+
+Para que A* garantice encontrar la ruta óptima, la heurística debe ser **admisible**, es decir:
+
+> **h(n) ≤ costo real de n al destino**, para todo nodo n.
+
+La distancia en línea recta (Haversine) **siempre es menor o igual** a la distancia por carretera, porque la línea recta es el camino más corto posible entre dos puntos.
+
+```
+                    Distancia real por carretera
+    n ─────┐    ┌───────────── destino
+            │    │
+            └────┘
+            
+    n ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  destino
+       Distancia Haversine (línea recta)
+       
+    Siempre se cumple: Haversine ≤ Distancia real  ✅
+```
+
+### 6.4 Pseudocódigo de A*
+
+```
+ALGORITMO A_Estrella(Grafo G, nodo inicio, nodo fin, α, β):
+    
+    // 1. INICIALIZACIÓN (igual que Dijkstra)
+    g[inicio] ← 0
+    h_inicio ← haversine(coordenadas(inicio), coordenadas(fin))
+    f[inicio] ← g[inicio] + h_inicio
+    
+    cola ← nueva ColaDePrioridad()
+    cola.insertar( (f[inicio], inicio) )    // ← Diferencia: usa f, no g
+    
+    predecesor ← {}
+    visitados ← conjunto vacío
+    
+    // 2. BUCLE PRINCIPAL
+    MIENTRAS cola NO esté vacía:
+        (f_actual, nodo_actual) ← cola.extraer_mínimo()
+        
+        SI nodo_actual ∈ visitados:
+            CONTINUAR
+        
+        visitados.agregar(nodo_actual)
+        
+        SI nodo_actual == fin:
+            RETORNAR reconstruir_camino(predecesor, inicio, fin), g[fin]
+        
+        // 3. RELAJACIÓN CON HEURÍSTICA
+        PARA CADA vecino DE nodo_actual:
+            SI vecino ∉ visitados:
+                peso ← α × longitud(nodo_actual, vecino) + β × riesgo(nodo_actual, vecino)
+                nueva_g ← g[nodo_actual] + peso
+                
+                SI nueva_g < g.obtener(vecino, ∞):
+                    g[vecino] ← nueva_g
+                    h ← haversine(coordenadas(vecino), coordenadas(fin))
+                    f[vecino] ← nueva_g + h          // ← f = g + h
+                    predecesor[vecino] ← nodo_actual
+                    cola.insertar( (f[vecino], vecino) )
+    
+    RETORNAR NULL, ∞
+```
+
+### 6.5 Diferencias Clave con Dijkstra (Resaltadas)
+
+```diff
+  ALGORITMO(Grafo G, nodo inicio, nodo fin, α, β):
+      g[inicio] ← 0
++     h_inicio ← haversine(coordenadas(inicio), coordenadas(fin))
++     f[inicio] ← g[inicio] + h_inicio
+-     cola.insertar( (0, inicio) )            // Dijkstra: ordena por g
++     cola.insertar( (f[inicio], inicio) )    // A*: ordena por f = g + h
+      ...
+              SI nueva_g < g[vecino]:
+                  g[vecino] ← nueva_g
++                 h ← haversine(coordenadas(vecino), coordenadas(fin))
++                 f[vecino] ← nueva_g + h
+-                 cola.insertar( (nueva_g, vecino) )    // Dijkstra
++                 cola.insertar( (f[vecino], vecino) )  // A*
+```
+
+### 6.6 Complejidad de A*
+
+| Tipo | Peor caso | Caso típico |
+|---|---|---|
+| **Temporal** | O((V + E) log V) | Mejor que Dijkstra (menos nodos explorados) |
+| **Espacial** | O(V) | Similar a Dijkstra |
+
+> **Nota:** En el peor caso, A* tiene la misma complejidad que Dijkstra. La ventaja es **práctica**: con una buena heurística, A* explora significativamente menos nodos.
+
+### 6.7 Ejemplo Visual: A* vs Dijkstra
+
+```
+Grafo (los números son costos de arista):
+
+    A ──3── B ──2── C
+    │       │       │
+    4       5       1
+    │       │       │
+    D ──1── E ──3── F (destino)
+
+Dijkstra desde A hasta F:
+  Explora: A → B → D → E → C → F
+  Nodos explorados: 6 (todos)
+
+A* desde A hasta F (con heurística que favorece la dirección hacia F):
+  Explora: A → B → C → F
+  Nodos explorados: 4  ← ¡Menos nodos!
+  
+  A* "sabe" que debe ir hacia la derecha-abajo,
+  así que no pierde tiempo explorando D y E primero.
+```
+
+---
+
+## 7. Comparación entre Dijkstra y A*
+
+### 7.1 Tabla Comparativa Completa
+
+| Criterio | Dijkstra | A* |
+|---|---|---|
+| **Tipo de algoritmo** | Voraz (Greedy) | Voraz con heurística informada |
+| **Información usada** | Solo costo acumulado g(n) | Costo acumulado g(n) + estimación h(n) |
+| **Exploración** | En todas las direcciones (expansión radial) | Dirigida hacia el destino |
+| **Requiere heurística** | No | Sí (admisible) |
+| **Requiere coordenadas** | No | Sí (para calcular h) |
+| **Garantiza optimalidad** | Sí (pesos ≥ 0) | Sí (si h es admisible) |
+| **Complejidad temporal** | O((V+E) log V) | O((V+E) log V) peor caso |
+| **Nodos explorados** | Generalmente más | Generalmente menos |
+| **Implementación** | Más simple | Ligeramente más compleja |
+| **Mejor para** | Grafos pequeños, sin info geográfica | Grafos con información espacial |
+
+### 7.2 ¿Cuándo usar cada uno?
+
+```
+¿Tienes coordenadas geográficas de los nodos?
+    │
+    ├── NO → Usa DIJKSTRA
+    │         (no puedes calcular una heurística espacial)
+    │
+    └── SÍ → ¿El grafo es grande (miles de nodos)?
+              │
+              ├── SÍ → Usa A*
+              │         (la reducción de nodos explorados es significativa)
+              │
+              └── NO → Ambos son aceptables
+                        (la diferencia será mínima)
+```
+
+### 7.3 Trade-offs
+
+| Ventaja de Dijkstra | Ventaja de A* |
+|---|---|
+| No necesita heurística | Explora menos nodos |
+| Más simple de implementar | Más rápido en la práctica |
+| Funciona en cualquier grafo ponderado | Aprovecha información geográfica |
+| Menor overhead por nodo (no calcula h) | Mejor escalabilidad en grafos grandes |
+
+### 7.4 ¿Ambos dan la misma ruta?
+
+**Sí**, ambos algoritmos encuentran la **misma ruta óptima** (dado que la heurística de A* es admisible). La diferencia está en **cuántos nodos exploran** para encontrarla, no en la ruta resultante.
+
+> Si en tu implementación Dijkstra y A* dan rutas diferentes, probablemente hay un error en la heurística o en el manejo de empates.
+
+---
+
+## 8. Análisis de Complejidad Detallado
+
+### 8.1 Notación Utilizada
+
+| Símbolo | Significado | En nuestro proyecto |
+|---|---|---|
+| V | Número de vértices (nodos) | 25 |
+| E | Número de aristas | ~50 |
+| log | Logaritmo base 2 | — |
+
+### 8.2 Complejidad de las Estructuras
+
+| Operación | Complejidad | Justificación |
+|---|---|---|
+| Crear el grafo (insertar nodos) | O(V) | Un diccionario por nodo |
+| Agregar una arista | O(1) amortizado | Inserción en diccionario |
+| **Construir grafo completo** | **O(V + E)** | V nodos + E aristas |
+| Buscar vecinos de un nodo | O(1) amortizado | Acceso por clave en diccionario |
+| Iterar vecinos de un nodo | O(grado(nodo)) | Recorrer lista de adyacencia |
+
+### 8.3 Complejidad de Dijkstra (Detallada)
+
+```
+INICIALIZACIÓN:
+  - Inicializar distancias:                 O(V)
+  - Crear cola de prioridad:                O(1)
+  
+BUCLE PRINCIPAL:
+  - Cada nodo se extrae del heap UNA vez:   V × O(log V) = O(V log V)
+  - Cada arista se examina UNA vez:         E relajaciones
+  - Cada relajación puede insertar en heap:  E × O(log V) = O(E log V)
+  
+TOTAL TEMPORAL: O(V) + O(V log V) + O(E log V) = O((V + E) log V)
+TOTAL ESPACIAL: O(V) para distancias + O(V) para predecesores 
+                + O(V) para visitados + O(V+E) para cola = O(V + E)
+```
+
+### 8.4 Complejidad de A* (Detallada)
+
+```
+IGUAL QUE DIJKSTRA, PERO:
+  - Cada relajación calcula haversine:      O(1) por cálculo
+  - Peor caso: se exploran todos los nodos
+  
+PEOR CASO TEMPORAL:  O((V + E) log V)    ← Mismo que Dijkstra
+CASO TÍPICO:         Mejor que Dijkstra    ← Menos nodos explorados
+ESPACIAL:            O(V + E)             ← Mismo que Dijkstra
+```
+
+### 8.5 ¿Qué pasaría SIN cola de prioridad (heapq)?
+
+Si en lugar de usar un heap usáramos una lista simple para encontrar el mínimo:
+
+| Operación | Con heapq | Con lista simple |
+|---|---|---|
+| Extraer mínimo | O(log V) | O(V) — búsqueda lineal |
+| Insertar | O(log V) | O(1) — agregar al final |
+| **Dijkstra completo** | **O((V+E) log V)** | **O(V² + E)** ≈ **O(V²)** |
+
+**Con nuestros datos (V=25, E=50):**
+
+| Implementación | Operaciones aproximadas |
+|---|---|
+| Con heapq | (25 + 50) × log₂(25) ≈ 75 × 5 = 375 |
+| Sin heapq | 25² + 50 = 675 |
+
+La diferencia parece pequeña con 25 nodos, pero con una ciudad real (V=10,000, E=30,000):
+
+| Implementación | Operaciones aproximadas |
+|---|---|
+| Con heapq | 40,000 × 14 ≈ **560,000** |
+| Sin heapq | 10,000² = **100,000,000** |
+
+**¡La versión con heapq es ~178 veces más rápida!**
+
+### 8.6 Resumen de Complejidades
+
+| Componente | Temporal | Espacial |
+|---|---|---|
+| Construir grafo | O(V + E) | O(V + E) |
+| Dijkstra (con heapq) | O((V+E) log V) | O(V + E) |
+| A* (con heapq) | O((V+E) log V) peor caso | O(V + E) |
+| Dijkstra (sin heapq) | O(V²) | O(V) |
+| Calcular Haversine | O(1) | O(1) |
+| Calcular costo de arista | O(1) | O(1) |
+
+---
+
+## 9. Técnicas de Diseño Utilizadas
+
+### 9.1 Algoritmos Voraces (Greedy)
+
+**Definición:** Un algoritmo voraz toma en cada paso la **mejor decisión local** esperando que lleve a una solución global óptima.
+
+**En Dijkstra:**
+- En cada paso, selecciona el nodo no visitado con **menor distancia acumulada**.
+- Esta decisión local es óptima gracias a que los pesos son no negativos.
+
+**En A\*:**
+- En cada paso, selecciona el nodo con **menor f(n) = g(n) + h(n)**.
+- Combina la información local (g) con una estimación global (h).
+
+```
+Paso 1: ¿Cuál exploro primero?  → El de menor costo (decisión voraz)
+Paso 2: ¿Cuál exploro ahora?    → El de menor costo restante (voraz otra vez)
+...
+Paso k: ¿Llegué al destino?     → ¡Sí! Y el camino es óptimo.
+```
+
+### 9.2 Programación Dinámica (Subproblemas Óptimos)
+
+**Definición:** La programación dinámica resuelve problemas descomponiéndolos en **subproblemas superpuestos** y almacenando las soluciones para **no recalcularlas**.
+
+**En Dijkstra y A\*:**
+- El array `distancia[]` almacena la mejor distancia conocida a cada nodo.
+- Cuando encontramos un camino mejor a un nodo, **actualizamos** (relajamos) su distancia.
+- La solución final (camino óptimo A→Z) se construye a partir de las soluciones parciales óptimas (camino óptimo A→B, A→C, etc.).
+
+```
+Subproblema:  "¿Cuál es el camino óptimo de A a X?"
+Se resuelve usando: "Camino óptimo de A a W" + arista (W, X)
+
+Esto es SUBESTRUCTURA ÓPTIMA:
+  camino_óptimo(A, X) = camino_óptimo(A, W) + arista(W, X)
+  para algún vecino W de X
+```
+
+### 9.3 Estructuras de Datos Clave
+
+| Estructura | Uso en el proyecto | Operaciones principales |
+|---|---|---|
+| **Diccionario (dict)** | Lista de adyacencia del grafo | Acceso O(1), inserción O(1) |
+| **heapq (min-heap)** | Cola de prioridad en Dijkstra/A* | Insertar O(log V), extraer mín O(log V) |
+| **Conjunto (set)** | Nodos visitados | Pertenencia O(1), inserción O(1) |
+| **Lista** | Reconstrucción del camino | Append O(1), reverse O(V) |
+| **DataFrame (pandas)** | Almacenamiento de datos de nodos y aristas | Acceso por columna O(1) |
+
+### 9.4 Patrón de Diseño: Relajación de Aristas
+
+La **relajación** es la operación fundamental de Dijkstra y A*:
+
+```python
+# Relajación: ¿Encontramos un camino mejor al vecino?
+nueva_distancia = distancia[actual] + peso(actual, vecino)
+
+if nueva_distancia < distancia[vecino]:
+    distancia[vecino] = nueva_distancia    # ¡Actualizar!
+    predecesor[vecino] = actual            # Recordar por dónde llegamos
+    heapq.heappush(cola, (nueva_distancia, vecino))
+```
+
+**Analogía:** Es como cuando descubres un atajo a la universidad. Si el nuevo camino es más corto que el que conocías, actualizas tu mapa mental con la nueva ruta.
+
+---
+
+## 10. Guía de Instalación y Ejecución
+
+### 10.1 Requisitos Previos
+
+| Requisito | Versión mínima | Verificar con |
+|---|---|---|
+| Python | 3.8+ | `python --version` |
+| pip | 20.0+ | `pip --version` |
+
+### 10.2 Instalación de Python
+
+**Windows:**
+1. Descargar Python desde [python.org](https://www.python.org/downloads/)
+2. **IMPORTANTE:** Marcar la casilla **"Add Python to PATH"** durante la instalación.
+3. Verificar: abrir CMD o PowerShell y ejecutar:
+   ```
+   python --version
+   ```
+
+**macOS/Linux:**
+```bash
+# macOS (con Homebrew)
+brew install python
+
+# Ubuntu/Debian
+sudo apt update
+sudo apt install python3 python3-pip
+```
+
+### 10.3 Instalación de Dependencias
+
+Abrir una terminal en la carpeta del proyecto y ejecutar:
+
+```bash
+pip install -r requirements.txt
+```
+
+Esto instalará:
+- `pandas` — Manipulación de datos tabulares
+- `folium` — Generación de mapas interactivos
+- `streamlit` — Framework de aplicaciones web
+- `streamlit-folium` — Integración de folium con Streamlit
+
+**Verificar la instalación:**
+```bash
+python -c "import pandas; import folium; import streamlit; print('¡Todo instalado correctamente!')"
+```
+
+### 10.4 Ejecutar la Interfaz de Consola
+
+```bash
+python principal.py
+```
+
+**Flujo esperado:**
+```
+=== Rutas Óptimas y Seguras en Medellín ===
+
+Nodos disponibles:
+1. Parque Berrío
+2. Parque de Bolívar
+3. Estación Prado
+...
+
+Seleccione origen (número): 1
+Seleccione destino (número): 10
+Valor de alfa (peso distancia, 0-1): 0.5
+Valor de beta (peso riesgo, 0-1): 0.5
+
+Ejecutando Dijkstra...
+Ejecutando A*...
+
+=== Resultados ===
+Dijkstra: Ruta encontrada con costo 234.5
+  Parque Berrío → Estación Prado → ... → Destino
+A*: Ruta encontrada con costo 234.5
+  Parque Berrío → Estación Prado → ... → Destino
+
+Mapa generado en: mapa_ruta.html
+```
+
+### 10.5 Ejecutar la Interfaz Web (Streamlit)
+
+```bash
+streamlit run interfaz.py
+```
+
+Esto abrirá automáticamente el navegador en `http://localhost:8501`.
+
+**Si no se abre automáticamente**, copiar y pegar la URL que aparece en la terminal.
+
+### 10.6 Solución de Problemas Comunes
+
+| Problema | Solución |
+|---|---|
+| `python` no se reconoce | Agregar Python al PATH del sistema |
+| `pip` no se reconoce | Usar `python -m pip` en su lugar |
+| Error de módulo no encontrado | Ejecutar `pip install -r requirements.txt` |
+| Streamlit no abre el navegador | Abrir manualmente `http://localhost:8501` |
+| Puerto 8501 en uso | Ejecutar `streamlit run interfaz.py --server.port 8502` |
+
+---
+
+## 11. Guía de Uso de la Interfaz
+
+### 11.1 Panel de Controles (Barra Lateral)
+
+| Control | Tipo | Descripción |
+|---|---|---|
+| **Origen** | Selectbox | Nodo de partida (lugar en Medellín) |
+| **Destino** | Selectbox | Nodo de llegada |
+| **α (Alfa)** | Slider (0.0 – 1.0) | Peso de la distancia en el costo |
+| **β (Beta)** | Slider (0.0 – 1.0) | Peso del riesgo en el costo |
+
+### 11.2 Colores en el Mapa
+
+| Color | Significado |
+|---|---|
+| 🔵 **Azul** | Ruta encontrada por Dijkstra |
+| 🔴 **Rojo** | Ruta encontrada por A* |
+| 🟢 **Verde** | Nodo de origen |
+| 🔴 **Rojo (marcador)** | Nodo de destino |
+| ⚪ **Gris** | Nodos intermedios |
+
+### 11.3 Métricas Comparativas
+
+La interfaz muestra para cada algoritmo:
+
+| Métrica | Descripción |
+|---|---|
+| **Costo total** | Valor de la función C acumulada en toda la ruta |
+| **Distancia total** | Suma de longitudes de las aristas de la ruta (en metros) |
+| **Riesgo acumulado** | Suma de riesgos de las aristas de la ruta |
+| **Nodos visitados** | Cantidad de nodos que el algoritmo exploró |
+| **Tiempo de ejecución** | Tiempo en milisegundos que tardó el algoritmo |
+
+### 11.3.1 Métrica con estilo personalizado
+
+La función mostrar_metricas presenta una métrica en Streamlit con formato visual personalizado. Recibe una etiqueta y un valor, y construye el contenido usando HTML para controlar el estilo. El parámetro color define el color CSS del valor mostrado y permite ajustar el tono de la métrica; por defecto usa un color más pálido.
+
+```python
+def mostrar_metricas(etiqueta, valor, color="#f2d8c2"):
+  st.markdown(
+    f'<div style="margin-bottom:0.15rem;">{etiqueta}</div>'
+    f'<div style="color:{color}; font-size:1.35rem; font-weight:600; margin-bottom:0.6rem;">{valor}</div>',
+    unsafe_allow_html=True,
+  )
+```
+
+**Args:**
+
+- **etiqueta:** Texto descriptivo de la métrica.
+- **valor:** Valor que se desea mostrar.
+- **color:** Color CSS aplicado al valor.
+
+### 11.4 Interpretación de Resultados
+
+**Ejemplo de lectura:**
+
+```
+┌─────────────────────────────────────────┐
+│          DIJKSTRA          A*           │
+│  Costo:    234.5          234.5         │
+│  Distancia: 1,200m       1,200m        │
+│  Riesgo:    12            12            │
+│  Nodos:     18            11     ← A* exploró menos │
+│  Tiempo:    2.3ms         1.8ms  ← A* fue más rápido │
+└─────────────────────────────────────────┘
+```
+
+**¿Qué observar?**
+1. **Costo total:** Debería ser igual (ambos encuentran la ruta óptima).
+2. **Nodos visitados:** A* generalmente explora menos nodos.
+3. **Tiempo:** A* suele ser ligeramente más rápido.
+
+### 11.5 Selección Interactiva por Clic
+
+La interfaz cuenta con un sistema bidireccional que permite cambiar el origen y el destino haciendo clic directamente sobre el mapa interactivo:
+
+1. **Configurar la Acción:** En la barra lateral, bajo la sección **"Selección por Mapa"**, elige si deseas establecer el nodo como **Inicio** o **Destino**.
+2. **Hacer Clic en el Mapa:** Haz clic en cualquier marcador circular de nodo o en cualquier tramo de calle.
+3. **Actualización Automática:** El sistema detectará la coordenada del clic, calculará mediante distancia euclidiana cuál es el nodo más cercano en la base de datos, y actualizará la ruta de forma inmediata sin necesidad de tocar los menús desplegables de la barra lateral.
+4. **Retroalimentación:** Aparecerá una notificación emergente flotante (toast) confirmando el cambio del punto.
+
+### 11.6 Experimentación Sugerida
+
+Prueba estas combinaciones para entender el comportamiento:
+
+| Experimento | α | β | Qué observar |
+|---|---|---|---|
+| Solo distancia | 1.0 | 0.0 | La ruta más corta geográficamente |
+| Solo seguridad | 0.0 | 1.0 | La ruta más segura (puede ser larga) |
+| Equilibrado | 0.5 | 0.5 | Balance entre ambos criterios |
+| Gradual | 0.1→0.9 | 0.9→0.1 | Cómo cambia la ruta gradualmente |
+
+---
+
+## 12. Preguntas Frecuentes para la Sustentación
+
+### Pregunta 1: ¿Por qué eligieron lista de adyacencia y no matriz de adyacencia?
+
+> **Respuesta sugerida:** "Elegimos lista de adyacencia porque nuestro grafo es **disperso** (sparse): tiene 25 nodos pero solo ~50 aristas, lo que significa que cada nodo tiene en promedio 4 conexiones. Con una matriz de adyacencia necesitaríamos 25×25 = 625 celdas, desperdiciando la mayoría (575 serían ceros). Con lista de adyacencia solo almacenamos las 50 conexiones reales, usando O(V+E) espacio en lugar de O(V²). Además, los algoritmos Dijkstra y A* necesitan iterar sobre los vecinos de un nodo frecuentemente, y con lista de adyacencia esto es O(grado) ≈ O(4), mientras que con matriz sería O(V) = O(25)."
+
+### Pregunta 2: ¿Cuál es la complejidad temporal de Dijkstra y por qué?
+
+> **Respuesta sugerida:** "La complejidad temporal de Dijkstra con cola de prioridad (heap) es **O((V+E) log V)**. Esto se debe a que: (1) cada nodo se extrae del heap exactamente una vez, y cada extracción cuesta O(log V), dando O(V log V); (2) cada arista se examina exactamente una vez durante la relajación, y cada inserción al heap cuesta O(log V), dando O(E log V). Combinando: O(V log V + E log V) = O((V+E) log V). Sin heap, usar una búsqueda lineal para el mínimo costaría O(V) por extracción, dando O(V² + E) ≈ O(V²)."
+
+### Pregunta 3: ¿Qué pasaría si los pesos fueran negativos?
+
+> **Respuesta sugerida:** "Dijkstra **no funcionaría correctamente** con pesos negativos. El algoritmo asume que una vez que un nodo se extrae de la cola de prioridad, su distancia es definitiva. Con pesos negativos, podría existir un camino más largo que luego se 'acorte' al atravesar una arista negativa, invalidando decisiones previas. Para grafos con pesos negativos (sin ciclos negativos) se debería usar el algoritmo de **Bellman-Ford** con complejidad O(V×E). En nuestro caso, como α ≥ 0, β ≥ 0, longitud ≥ 0 y riesgo ≥ 0, los pesos siempre son no negativos."
+
+### Pregunta 4: ¿Por qué la distancia Haversine es una heurística admisible?
+
+> **Respuesta sugerida:** "Una heurística es **admisible** si nunca sobreestima el costo real. La distancia Haversine calcula la distancia en **línea recta** entre dos puntos en la superficie terrestre. Como cualquier ruta real por carretera debe ser **igual o más larga** que la línea recta (por definición geométrica, la línea recta es la distancia mínima entre dos puntos), la Haversine nunca sobreestima. Esto garantiza que A* encontrará la ruta óptima."
+
+### Pregunta 5: ¿Qué diferencia hay entre Dijkstra y A*?
+
+> **Respuesta sugerida:** "La diferencia principal es que Dijkstra ordena la cola de prioridad solo por el costo acumulado g(n), mientras que A* usa f(n) = g(n) + h(n), donde h(n) es una estimación del costo restante hasta el destino. Esto hace que A* 'mire hacia adelante' y dirija su exploración hacia el destino, explorando típicamente menos nodos. Ambos garantizan la ruta óptima (si la heurística de A* es admisible), pero A* suele ser más rápido en la práctica. La complejidad en el peor caso es la misma: O((V+E) log V)."
+
+### Pregunta 6: ¿Qué pasa si cambio alfa y beta?
+
+> **Respuesta sugerida:** "Cambiar α y β modifica la **función de costo** C(e) = α×longitud + β×riesgo, lo que puede cambiar completamente qué ruta es óptima. Con α=1, β=0 se obtiene la ruta más corta en distancia. Con α=0, β=1 se obtiene la ruta más segura. Valores intermedios buscan un balance. Al aumentar β, el algoritmo penaliza más las aristas peligrosas y tiende a evitarlas, posiblemente eligiendo rutas más largas pero más seguras."
+
+### Pregunta 7: ¿Por qué usar `heapq` y no simplemente ordenar una lista?
+
+> **Respuesta sugerida:** "Con `heapq`, insertar un elemento cuesta O(log V) y extraer el mínimo cuesta O(log V). Si usáramos una lista ordenada, insertar mantieniendo el orden costaría O(V) (necesitamos buscar la posición correcta y desplazar elementos). Si usáramos una lista desordenada, encontrar el mínimo costaría O(V). El heap nos da O(log V) para **ambas** operaciones, que es óptimo. En grafos grandes, esto marca una diferencia enorme: con 10,000 nodos, heap haría ~14 operaciones por extracción, mientras que la lista haría 10,000."
+
+### Pregunta 8: ¿Cómo se reconstruye el camino una vez que el algoritmo termina?
+
+> **Respuesta sugerida:** "Durante la ejecución, cada vez que actualizamos la distancia de un nodo, guardamos su **predecesor** (el nodo desde el cual llegamos con menor costo). Al final, reconstruimos el camino comenzando desde el destino y siguiendo los predecesores hacia atrás hasta llegar al origen. Luego invertimos la lista para obtener el camino en orden origen → destino. Esto cuesta O(V) en el peor caso."
+
+### Pregunta 9: ¿Qué tipo de técnica de diseño de algoritmos utilizan?
+
+> **Respuesta sugerida:** "Utilizamos principalmente dos técnicas: (1) **Algoritmos voraces (Greedy):** ambos algoritmos seleccionan en cada paso el nodo con menor costo, tomando la mejor decisión local. En Dijkstra, esto funciona gracias a que los pesos son no negativos. (2) **Subestructura óptima** (principio de programación dinámica): el camino óptimo de A a C que pasa por B contiene como subcamino el camino óptimo de A a B. El array de distancias actúa como tabla de memoización, almacenando las mejores soluciones parciales."
+
+### Pregunta 10: ¿El proyecto escala a una ciudad real completa?
+
+> **Respuesta sugerida:** "Nuestro prototipo usa 25 nodos y 50 aristas. Una ciudad real como Medellín tendría decenas de miles de intersecciones y calles. Gracias al uso de lista de adyacencia O(V+E) y cola de prioridad O((V+E) log V), el proyecto escalaría bien. Para una red de 50,000 nodos y 150,000 aristas, Dijkstra haría aproximadamente 200,000 × 16 ≈ 3.2 millones de operaciones, ejecutable en fracciones de segundo en un computador moderno. A* sería aún más rápido al explorar menos nodos."
+
+### Pregunta 11: ¿Podrían agregar un tercer criterio además de distancia y riesgo?
+
+> **Respuesta sugerida:** "Sí, la función de costo se podría extender a C(e) = α×longitud + β×riesgo + γ×tráfico (u otro criterio). La combinación lineal se generaliza fácilmente. Los algoritmos Dijkstra y A* seguirían funcionando siempre que el costo total sea no negativo. Solo necesitaríamos agregar el nuevo dato a cada arista y un nuevo parámetro γ."
+
+### Pregunta 12: ¿Por qué Python y no otro lenguaje?
+
+> **Respuesta sugerida:** "Python ofrece ventajas significativas para este proyecto: (1) `heapq` viene incluido en la biblioteca estándar, (2) los diccionarios son ideales para la lista de adyacencia, (3) `pandas` facilita el manejo de datos, (4) `folium` permite generar mapas interactivos fácilmente, y (5) `streamlit` permite crear interfaces web con muy poco código. Aunque Python es más lento que C++ o Java, para el tamaño de nuestro grafo (25 nodos) la diferencia es imperceptible."
+
+### Pregunta 13: ¿Qué es la 'relajación' en el contexto de estos algoritmos?
+
+> **Respuesta sugerida:** "La relajación es la operación central de Dijkstra y A*. Consiste en verificar si hemos encontrado un **camino mejor** hacia un nodo vecino. Si la nueva distancia (distancia actual + peso de la arista) es menor que la distancia previamente conocida, actualizamos la distancia y el predecesor. El término 'relajación' viene de la analogía de aflojar o relajar una restricción: estamos 'aflojando' la estimación de distancia, acercándola al valor óptimo real."
+
+### Pregunta 14: ¿Ambos algoritmos siempre dan el mismo resultado?
+
+> **Respuesta sugerida:** "Ambos encuentran una ruta con el **mismo costo óptimo**, pero no necesariamente la misma secuencia exacta de nodos. Si existen múltiples rutas con el mismo costo mínimo, cada algoritmo podría elegir una diferente dependiendo del orden de desempate en la cola de prioridad. Sin embargo, el costo total será idéntico porque ambos garantizan optimalidad."
+
+### Pregunta 15: ¿Qué ventaja tiene la interfaz web sobre la de consola?
+
+> **Respuesta sugerida:** "La interfaz web (Streamlit) ofrece: (1) **visualización en mapa** real con las rutas trazadas, (2) **sliders interactivos** para ajustar α y β en tiempo real, (3) **comparación visual** lado a lado de ambos algoritmos, (4) **gráficas** de análisis experimental, y (5) **accesibilidad** desde cualquier navegador. La interfaz de consola es útil para pruebas rápidas y para entender el flujo de ejecución, pero la web facilita la experimentación y la presentación de resultados."
+
+---
+
+## 13. Referencias
+
+### 13.1 Libros de Texto
+
+| Libro | Autor(es) | Capítulos relevantes |
+|---|---|---|
+| **Introduction to Algorithms** (CLRS) | Cormen, Leiserson, Rivest, Stein | Cap. 22 (Grafos), Cap. 24 (Caminos más cortos) |
+| **Algorithm Design** | Kleinberg, Tardos | Cap. 4 (Algoritmos voraces), Cap. 6 (Programación dinámica) |
+| **Algorithms** | Sedgewick, Wayne | Cap. 4 (Grafos) |
+| **Artificial Intelligence: A Modern Approach** | Russell, Norvig | Cap. 3 (Búsqueda informada y A*) |
+
+### 13.2 Recursos en Línea
+
+| Recurso | URL | Descripción |
+|---|---|---|
+| Visualgo | https://visualgo.net/en/sssp | Visualización interactiva de Dijkstra |
+| GeeksforGeeks — Dijkstra | https://www.geeksforgeeks.org/dijkstras-shortest-path-algorithm-greedy-algo-7/ | Tutorial con código |
+| GeeksforGeeks — A* | https://www.geeksforgeeks.org/a-search-algorithm/ | Tutorial con código |
+| Python heapq docs | https://docs.python.org/3/library/heapq.html | Documentación oficial |
+| Streamlit docs | https://docs.streamlit.io/ | Documentación de Streamlit |
+| Folium docs | https://python-visualization.github.io/folium/ | Documentación de Folium |
+
+### 13.3 Artículos Originales
+
+| Artículo | Autor | Año |
+|---|---|---|
+| "A note on two problems in connexion with graphs" | E.W. Dijkstra | 1959 |
+| "A Formal Basis for the Heuristic Determination of Minimum Cost Paths" | Hart, Nilsson, Raphael | 1968 |
+
+---
+
+> **📝 Nota final:** Este documento fue diseñado para cubrir todos los temas que podrían surgir en una sustentación de 30 minutos. Se recomienda al estudiante:
+> 1. Leer el documento completo al menos una vez.
+> 2. Practicar las preguntas de la sección 12 en voz alta.
+> 3. Ejecutar el proyecto y experimentar con diferentes valores de α y β.
+> 4. Poder explicar el pseudocódigo paso a paso.
+> 5. Entender las complejidades y poder justificar las decisiones de diseño.
+
+---
+
+*Documento generado para el curso de Análisis y Diseño de Algoritmos (ADA) — 2026*
