@@ -38,12 +38,11 @@ def mostrar_metricas(etiqueta, valor, color="#f2d8c2"):
 def main():
     st.title("Rutas Óptimas y Seguras en Medellín")
     grafo = construir_grafo(cargar_datos())
-    nodos = obtener_nombres_nodos()
-
+    
     with st.sidebar:
-        st.header("Configuración")
-        inicio = st.selectbox("Inicio", nodos, index=nodos.index("Poblado"))
-        fin = st.selectbox("Destino", nodos, index=nodos.index("Aranjuez"))
+        nodos_disponibles = obtener_nombres_nodos()
+        inicio = st.selectbox("📍 Punto de Inicio", nodos_disponibles, index=nodos_disponibles.index("Poblado"))
+        fin = st.selectbox("🎯 Punto de Destino", nodos_disponibles, index=nodos_disponibles.index("Aranjuez"))
         st.markdown("### Prioridad de Ruta")
         preset = st.pills(
             "Estrategia:", 
