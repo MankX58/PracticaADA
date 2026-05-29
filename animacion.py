@@ -6,9 +6,9 @@ import time
 from datos import distancia_haversine
 
 def obtener_pasos_animacion(grafo_obj, inicio, fin, w_dist, w_riesgo, usar_heuristica=False):
-    distancias = {n: float("inf") for n in grafo_obj.obtener_nodos()}
+    distancias = {}
+    predecesores = {}
     distancias[inicio] = 0
-    predecesores = {n: None for n in grafo_obj.obtener_nodos()}
     visitados = set()
     cola = [(0, inicio)]
     coord_fin = grafo_obj.obtener_coordenadas(fin) if usar_heuristica else None
@@ -20,7 +20,7 @@ def obtener_pasos_animacion(grafo_obj, inicio, fin, w_dist, w_riesgo, usar_heuri
         if actual in visitados: continue
         visitados.add(actual)
         
-        parent = predecesores[actual]
+        parent = predecesores.get(actual)
         pasos.append({"node": actual, "parent": parent})
         
         if actual == fin:
@@ -29,8 +29,8 @@ def obtener_pasos_animacion(grafo_obj, inicio, fin, w_dist, w_riesgo, usar_heuri
         for a in grafo_obj.obtener_vecinos(actual):
             v = a["vecino"]
             if v not in visitados:
-                nuevo_costo = distancias[actual] + (w_dist * a["longitud"] + w_riesgo * a["riesgo"])
-                if nuevo_costo < distancias[v]:
+                nuevo_costo = distancias.get(actual, float("inf")) + (w_dist * a["longitud"] + w_riesgo * a["riesgo"])
+                if nuevo_costo < distancias.get(v, float("inf")):
                     distancias[v] = nuevo_costo
                     predecesores[v] = actual
                     prioridad = nuevo_costo
@@ -41,11 +41,11 @@ def obtener_pasos_animacion(grafo_obj, inicio, fin, w_dist, w_riesgo, usar_heuri
                     heapq.heappush(cola, (prioridad, v))
                     
     ruta = []
-    if distancias[fin] != float("inf"):
+    if distancias.get(fin, float("inf")) != float("inf"):
         actual = fin
         while actual:
             ruta.append(actual)
-            actual = predecesores[actual]
+            actual = predecesores.get(actual)
         ruta.reverse()
         
     return pasos, ruta
