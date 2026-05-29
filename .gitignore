@@ -1,0 +1,43 @@
+/.idea/
+/.vscode/
+
+# Compiled files
+*.class
+*.o
+*.obj
+*.exe
+*.out
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Java / build tools
+/bin/
+/build/
+/out/
+/target/
+*.jar
+*.war
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+
+
+#Pq se me da la gana
+manual_estudiante.md

@@ -1,0 +1,9 @@
+
+# Dependencias
+
+#   pip install -r requirements.txt
+
+pandas>=1.5.0           # Manejo de datos tabulares (DataFrames)
+folium>=0.14.0          # Generación de mapas interactivos HTML
+streamlit>=1.28.0       # Interfaz web interactiva
+streamlit-folium>=0.15.0  # Integración de mapas Folium en Streamlit
